@@ -1,4 +1,5 @@
 import os
+import requests
 import streamlit as st
 import numpy as np
 import cv2
@@ -50,16 +51,14 @@ st.markdown("""
         color: #ffffff; margin: 0 0 0.75rem;
         letter-spacing: -0.02em;
     }
-    .hero-title span {
-        color: #82cfff;
-    }
+    .hero-title span { color: #82cfff; }
     .hero-subtitle {
         font-size: 0.95rem; font-weight: 400;
         color: rgba(255,255,255,0.75);
-        max-width: 500px; margin: 0 auto; line-height: 1.65;
+        max-width: 520px; margin: 0 auto; line-height: 1.65;
     }
 
-    /* ── Upload Zone ── */
+    /* ── Upload ── */
     .upload-label {
         font-size: 1rem; font-weight: 600; color: #1a1f36; margin-bottom: 0.3rem;
     }
@@ -69,10 +68,7 @@ st.markdown("""
         border: 2px dashed #c3d4f0;
         border-radius: 16px; padding: 2.2rem 2rem;
         text-align: center; margin-bottom: 1.5rem;
-        transition: border-color 0.2s;
     }
-    .upload-section:hover { border-color: #1a73e8; }
-
     [data-testid="stFileUploader"] { background: transparent !important; }
     [data-testid="stFileUploader"] > div {
         border: 2px dashed #c3d4f0 !important;
@@ -103,23 +99,10 @@ st.markdown("""
         max-height: 200px; object-fit: cover;
     }
 
-    /* ── Result Box ── */
-    .result-box {
-        background: #ffffff;
-        border: 1px solid #e4e9f2;
-        border-radius: 16px;
-        padding: 1.4rem 1.6rem;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        margin-bottom: 1rem;
-    }
-
     /* ── Diagnosis ── */
     .diag-label {
         font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em;
         text-transform: uppercase; color: #8492a6; margin-bottom: 0.5rem;
-    }
-    .diag-name {
-        font-size: 1.6rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15;
     }
     .confidence-label {
         font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em;
@@ -141,7 +124,7 @@ st.markdown("""
         border-radius: 999px !important; height: 8px !important;
     }
 
-    /* ── Disease Info Card ── */
+    /* ── Disease Card ── */
     .disease-card {
         background: #f0f7ff;
         border-left: 4px solid #1a73e8;
@@ -152,6 +135,33 @@ st.markdown("""
         font-size: 0.88rem; font-weight: 700; color: #1a73e8; margin-bottom: 0.35rem;
     }
     .disease-card-text { font-size: 0.85rem; color: #444c5e; line-height: 1.65; }
+
+    /* ── LLM Card ── */
+    .llm-card {
+        background: #f3f0ff;
+        border-left: 4px solid #6366f1;
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        margin-top: 1rem;
+    }
+    .llm-card-title {
+        font-size: 0.88rem; font-weight: 700; color: #6366f1;
+        margin-bottom: 0.65rem;
+        display: flex; align-items: center; gap: 0.4rem;
+    }
+    .llm-line {
+        font-size: 0.85rem; color: #374151;
+        line-height: 1.75; margin-bottom: 0.35rem;
+        padding-left: 0.6rem;
+        border-left: 2px solid #c4b5fd;
+    }
+    .llm-error {
+        font-size: 0.82rem; color: #92400e;
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: 8px; padding: 0.7rem 1rem;
+        margin-top: 0.5rem;
+    }
 
     /* ── Section label ── */
     .section-label {
@@ -179,17 +189,20 @@ st.markdown("""
         text-align: center; margin-top: 2.5rem; line-height: 1.6;
     }
 
-    /* ── Grad-CAM label ── */
-    .gradcam-label {
-        font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em;
-        text-transform: uppercase; color: #8492a6;
-        text-align: center; margin-top: 0.5rem;
-    }
-
     /* ── Sidebar ── */
     [data-testid="stSidebar"] {
         background: #ffffff !important;
         border-right: 1px solid #e4e9f2;
+    }
+    [data-testid="stSidebar"] * { color: #1a1f36; }
+
+    /* ── Sidebar code blocks ── */
+    code {
+        background: #eef2ff;
+        color: #4f46e5;
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.82rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -197,8 +210,10 @@ st.markdown("""
 # ==============================
 # Constants
 # ==============================
-MODEL_PATH = "best_efficientnetb3.h5"
-FILE_ID    = "1qnrKRAWa7UU5YbtT2UqGDbJij7uH6dIz"
+MODEL_PATH        = "best_efficientnetb3.h5"
+FILE_ID           = "1qnrKRAWa7UU5YbtT2UqGDbJij7uH6dIz"
+OLLAMA_URL        = "http://localhost:11434/api/generate"
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 
 # ==============================
 # Disease Info
@@ -252,7 +267,117 @@ severity_color = {
 }
 
 # ==============================
-# Load Model
+# LLM — Ollama & Claude API
+# ==============================
+PROMPT_TEMPLATE = """You are an ophthalmology AI assistant.
+
+Write exactly 5 short medical lines about this eye disease prediction:
+
+Prediction: {disease}
+Confidence: {confidence:.1f}%
+
+Structure (5 lines only, no headers, no repetition):
+1. Prediction statement.
+2. Short clinical definition.
+3. Key symptoms the patient may notice.
+4. Severity level (Mild / Moderate / Severe / Emergency).
+5. Recommended next step."""
+
+
+def _clean_lines(text: str) -> str:
+    lines = [l.strip() for l in text.split("\n") if l.strip()]
+    return "\n".join(lines[:5])
+
+
+def _explain_via_ollama(disease: str, confidence: float, ollama_model: str, ollama_url: str) -> str:
+    prompt  = PROMPT_TEMPLATE.format(disease=disease, confidence=confidence * 100)
+    payload = {
+        "model": ollama_model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "temperature": 0.1,
+            "num_predict": 120,
+            "repeat_penalty": 1.2,
+            "num_ctx": 512,
+        },
+    }
+    api_url  = f"{ollama_url.rstrip('/')}/api/generate"
+    response = requests.post(api_url, json=payload, timeout=180)
+    response.raise_for_status()
+    raw = response.json().get("response", "").strip()
+    return _clean_lines(raw)
+
+
+def _test_ollama_connection(ollama_url: str) -> tuple:
+    try:
+        r = requests.get(ollama_url.rstrip("/"), timeout=5)
+        if r.status_code == 200:
+            return True, "✅ Ollama يعمل بنجاح!"
+        return False, f"⚠️ استجابة غير متوقعة: {r.status_code}"
+    except requests.exceptions.ConnectionError:
+        return False, "❌ لا يمكن الاتصال — تأكد أن: ollama serve يعمل"
+    except requests.exceptions.Timeout:
+        return False, "❌ انتهت المهلة — الخادم لا يستجيب"
+    except Exception as e:
+        return False, f"❌ خطأ: {e}"
+
+
+def _explain_via_claude(disease: str, confidence: float, api_key: str) -> str:
+    prompt   = PROMPT_TEMPLATE.format(disease=disease, confidence=confidence * 100)
+    response = requests.post(
+        ANTHROPIC_API_URL,
+        headers={
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        },
+        json={
+            "model": "claude-haiku-4-5-20251001",
+            "max_tokens": 300,
+            "messages": [{"role": "user", "content": prompt}],
+        },
+        timeout=30,
+    )
+    response.raise_for_status()
+    raw = response.json()["content"][0]["text"].strip()
+    return _clean_lines(raw)
+
+
+def local_llm_explain(
+    disease: str,
+    confidence: float,
+    ollama_model: str = "llama3",
+    ollama_url: str   = "http://localhost:11434",
+    backend: str      = "ollama",
+    anthropic_api_key: str = "",
+) -> str:
+    try:
+        if backend == "claude":
+            if not anthropic_api_key.strip():
+                return "ERROR: أدخل Anthropic API Key في إعدادات الشريط الجانبي."
+            return _explain_via_claude(disease, confidence, anthropic_api_key.strip())
+        else:
+            return _explain_via_ollama(disease, confidence, ollama_model, ollama_url)
+    except requests.exceptions.ConnectionError:
+        if backend == "ollama":
+            return f"ERROR: تعذّر الاتصال بـ Ollama على {ollama_url} — تأكد أن: ollama serve يعمل"
+        return "ERROR: تعذّر الاتصال بـ Anthropic API — تحقق من اتصالك بالإنترنت."
+    except requests.exceptions.Timeout:
+        return "ERROR: انتهت مهلة الاستجابة — النموذج بطيء أو غير محمّل."
+    except requests.exceptions.HTTPError as e:
+        status = e.response.status_code if e.response is not None else "?"
+        if status == 401:
+            return "ERROR: API Key غير صالح — تحقق من المفتاح."
+        if status == 404 and backend == "ollama":
+            return f"ERROR: النموذج «{ollama_model}» غير محمّل — نفّذ: ollama pull {ollama_model}"
+        return f"ERROR: HTTP {status} — {e}"
+    except Exception as e:
+        return f"ERROR: خطأ غير متوقع: {e}"
+
+
+# ==============================
+# Load Vision Model
 # ==============================
 @st.cache_resource
 def load_model_cached():
@@ -271,6 +396,7 @@ def load_model_cached():
     except Exception as e:
         st.error(f"❌ فشل تحميل النموذج: {e}"); st.stop()
 
+
 # ==============================
 # Classes
 # ==============================
@@ -288,14 +414,17 @@ def preprocess(img):
     arr = tf.keras.applications.efficientnet.preprocess_input(arr)
     return np.expand_dims(arr, axis=0)
 
+
 def predict(img, model):
     preds = model.predict(preprocess(img))
-    idx = np.argmax(preds[0])
+    idx   = np.argmax(preds[0])
     return class_names[idx], float(np.max(preds)), preds[0]
+
 
 def overlay_heatmap(img, heatmap):
     arr = np.array(img.resize((300, 300)))
     return cv2.addWeighted(arr, 0.75, heatmap, 0.25, 0)
+
 
 def gradcam(img, model):
     arr = np.array(img.resize((300, 300)))
@@ -332,15 +461,16 @@ def gradcam(img, model):
     cam = cv2.resize(cam, (300, 300))
     return cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
 
+
 # ==============================
-# Hero Header
+# Hero
 # ==============================
 st.markdown("""
 <div class="hero">
     <div class="hero-eyebrow">AI-Powered Ophthalmology</div>
     <h1 class="hero-title">Assistant For Detection Of <span>Retinal Diseases</span></h1>
     <p class="hero-subtitle">
-        نظام ذكاء اصطناعي لتحليل صور قاع العين وكشف الأمراض 
+        نظام ذكاء اصطناعي لتحليل صور قاع العين وكشف الأمراض باستخدام EfficientNet و Grad-CAM
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -349,6 +479,78 @@ st.markdown("""
 # Load Model
 # ==============================
 model = load_model_cached()
+
+# ==============================
+# Sidebar — LLM Settings
+# ==============================
+with st.sidebar:
+    st.markdown("""
+    <div style="font-size:1rem; font-weight:700; color:#6366f1;
+                margin-bottom:1rem; padding-bottom:0.5rem;
+                border-bottom:1px solid #e4e9f2;">
+        ⚙️ إعدادات النموذج اللغوي
+    </div>
+    """, unsafe_allow_html=True)
+
+    enable_llm = st.toggle("تفعيل شرح LLM", value=True)
+
+    llm_backend = st.radio(
+        "مزوّد النموذج",
+        options=["Ollama (محلي)", "Claude API (سحابي)"],
+        index=0,
+        help="اختر Ollama لو النموذج عندك محلياً، أو Claude API لو عندك مفتاح Anthropic"
+    )
+    backend_key = "ollama" if llm_backend.startswith("Ollama") else "claude"
+
+    # ── Ollama settings ──
+    if backend_key == "ollama":
+        ollama_model = st.selectbox(
+            "نموذج Ollama",
+            options=["llama3", "mistral", "phi3", "gemma", "llama2", "neural-chat"],
+            index=0,
+            help="تأكد أن النموذج محمّل: ollama pull <model>"
+        )
+        ollama_url = st.text_input(
+            "Ollama URL",
+            value="http://localhost:11434",
+            help="الرابط الافتراضي لـ Ollama"
+        )
+        anthropic_api_key = ""
+
+        if st.button("🔌 اختبار الاتصال بـ Ollama", use_container_width=True):
+            ok, msg = _test_ollama_connection(ollama_url)
+            if ok:
+                st.success(msg)
+            else:
+                st.error(msg)
+
+        st.markdown("""
+        <div style="margin-top:1.2rem; font-size:0.78rem; color:#6b7280; line-height:2.1;">
+            <span style="font-weight:600; color:#374151;">تشغيل Ollama:</span><br>
+            <code>ollama serve</code>
+            <br><br>
+            <span style="font-weight:600; color:#374151;">تحميل نموذج:</span><br>
+            <code>ollama pull llama3</code>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── Claude API settings ──
+    else:
+        ollama_model      = "llama3"
+        ollama_url        = "http://localhost:11434"
+        anthropic_api_key = st.text_input(
+            "Anthropic API Key",
+            type="password",
+            placeholder="sk-ant-...",
+            help="احصل على مفتاحك من: console.anthropic.com"
+        )
+        st.markdown("""
+        <div style="margin-top:1rem; font-size:0.78rem; color:#6b7280; line-height:1.9;">
+            النموذج المستخدم: <code>claude-haiku</code><br>
+            <a href="https://console.anthropic.com" target="_blank"
+               style="color:#1a73e8; text-decoration:none;">← احصل على API Key</a>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ==============================
 # Layout
@@ -394,22 +596,23 @@ with right_col:
         color = severity_color.get(pred, "#1a73e8")
         info  = disease_info.get(pred, {})
 
-        # ── Diagnosis Result ──
-        st.markdown('<div class="result-box">', unsafe_allow_html=True)
+        # ── Diagnosis ──
         st.markdown(f"""
-        <div class="diag-label">نتيجة التشخيص</div>
-        <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:1rem;">
-            <span style="font-size:1.7rem;">{info.get('icon','🔬')}</span>
-            <span class="diag-name" style="color:{color};">{pred}</span>
+        <div style="margin-bottom:1.2rem;">
+            <div class="diag-label">نتيجة التشخيص</div>
+            <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:1rem;">
+                <span style="font-size:1.8rem;">{info.get('icon','🔬')}</span>
+                <span style="font-size:1.6rem; font-weight:800;
+                             color:{color}; letter-spacing:-0.01em;">{pred}</span>
+            </div>
+            <div class="confidence-label">مستوى الثقة</div>
+            <div class="confidence-value">{conf*100:.1f}<span>%</span></div>
         </div>
-        <div class="confidence-label">مستوى الثقة</div>
-        <div class="confidence-value">{conf*100:.1f}<span>%</span></div>
         """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
         st.progress(int(conf * 100))
 
-        # ── Disease Info Card ──
+        # ── Disease Card ──
         if info:
             st.markdown(f"""
             <div class="disease-card">
@@ -422,6 +625,36 @@ with right_col:
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+        # ── LLM Explanation ──
+        if enable_llm:
+            backend_label = "Claude API (Haiku)" if backend_key == "claude" else f"Ollama — {ollama_model}"
+            with st.spinner(f"🤖 جاري توليد الشرح الطبي عبر {backend_label}..."):
+                llm_result = local_llm_explain(
+                    pred, conf,
+                    ollama_model=ollama_model,
+                    ollama_url=ollama_url,
+                    backend=backend_key,
+                    anthropic_api_key=anthropic_api_key,
+                )
+
+            if llm_result.startswith("ERROR:"):
+                error_msg = llm_result.replace("ERROR:", "").strip()
+                st.markdown(f"""
+                <div class="llm-card">
+                    <div class="llm-card-title">🤖 شرح النموذج اللغوي — {backend_label}</div>
+                    <div class="llm-error">⚠️ {error_msg}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                lines      = [l.strip() for l in llm_result.split("\n") if l.strip()]
+                lines_html = "".join(f'<div class="llm-line">{line}</div>' for line in lines)
+                st.markdown(f"""
+                <div class="llm-card">
+                    <div class="llm-card-title">🤖 شرح النموذج اللغوي — {backend_label}</div>
+                    {lines_html}
+                </div>
+                """, unsafe_allow_html=True)
 
         # ── Grad-CAM ──
         st.markdown('<br>', unsafe_allow_html=True)
