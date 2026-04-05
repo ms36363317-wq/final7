@@ -11,191 +11,194 @@ from PIL import Image
 # Page Config
 # ==============================
 st.set_page_config(
-    page_title="👁️ Eye Vision AI",
+    page_title="Assistant For Detection Of Retinal Diseases",
     page_icon="👁️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # ==============================
-# Custom CSS — Light Theme (like app1)
+# Custom CSS — Light Theme
 # ==============================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 
-    /* ── Background ── */
-    .stApp { background: #f7f9fc; color: #1a1a2e; }
+    /* ── Background & Base ── */
+    .stApp { background: #f5f7fa; color: #1a1f36; }
     #MainMenu, footer, header { visibility: hidden; }
     .block-container { padding: 0 2rem 4rem; max-width: 1200px; }
 
-    /* ── Header ── */
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: #1a73e8;
+    /* ── Hero ── */
+    .hero {
         text-align: center;
-        margin-bottom: 0.2rem;
-        padding-top: 2rem;
+        padding: 3rem 2rem 2rem;
+        background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+        border-radius: 0 0 28px 28px;
+        margin: 0 -2rem 2.5rem;
     }
-    .sub-title {
-        font-size: 1rem;
-        color: #666;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    /* ── Section Header ── */
-    .section-header {
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: #1a73e8;
-        margin-top: 1.2rem;
+    .hero-eyebrow {
+        font-size: 0.72rem; font-weight: 600; letter-spacing: 0.28em;
+        text-transform: uppercase; color: rgba(255,255,255,0.7);
         margin-bottom: 0.6rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
+    }
+    .hero-title {
+        font-size: clamp(1.8rem, 4vw, 2.8rem);
+        font-weight: 800; line-height: 1.1;
+        color: #ffffff; margin: 0 0 0.75rem;
+        letter-spacing: -0.02em;
+    }
+    .hero-title span {
+        color: #82cfff;
+    }
+    .hero-subtitle {
+        font-size: 0.95rem; font-weight: 400;
+        color: rgba(255,255,255,0.75);
+        max-width: 500px; margin: 0 auto; line-height: 1.65;
     }
 
-    /* ── Upload ── */
+    /* ── Upload Zone ── */
+    .upload-label {
+        font-size: 1rem; font-weight: 600; color: #1a1f36; margin-bottom: 0.3rem;
+    }
+    .upload-hint { font-size: 0.82rem; color: #8492a6; }
+    .upload-section {
+        background: #ffffff;
+        border: 2px dashed #c3d4f0;
+        border-radius: 16px; padding: 2.2rem 2rem;
+        text-align: center; margin-bottom: 1.5rem;
+        transition: border-color 0.2s;
+    }
+    .upload-section:hover { border-color: #1a73e8; }
+
+    [data-testid="stFileUploader"] { background: transparent !important; }
     [data-testid="stFileUploader"] > div {
-        border: 2px dashed #c5d8f6 !important;
-        border-radius: 12px !important;
-        background: #eef4ff !important;
-        padding: 1rem !important;
+        border: 2px dashed #c3d4f0 !important;
+        border-radius: 14px !important;
+        background: #ffffff !important;
+        padding: 1.2rem !important;
     }
     [data-testid="stFileUploader"] label { color: #1a73e8 !important; font-weight: 500; }
 
-    /* ── Image ── */
-    [data-testid="stImage"] img {
-        border-radius: 12px;
-        width: 100%;
-        object-fit: cover;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-
-    /* ── Disease Badge ── */
-    .disease-badge {
-        display: inline-block;
-        background: #1a73e8;
-        color: white;
-        padding: 6px 20px;
-        border-radius: 20px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 0.6rem;
-    }
-
-    /* ── Confidence ── */
-    .confidence-value {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: #1a1a2e;
-        line-height: 1;
-    }
-    .confidence-value span {
-        font-size: 1rem;
-        font-weight: 400;
-        color: #888;
-    }
-    .confidence-label {
-        font-size: 0.82rem;
-        color: #888;
-        margin-bottom: 0.3rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-    }
-
-    /* ── Progress Bar ── */
-    .stProgress > div > div > div > div {
-        background: #1a73e8 !important;
-        border-radius: 999px !important;
-    }
-    .stProgress > div > div {
-        background: #e0eaff !important;
-        border-radius: 999px !important;
-        height: 8px !important;
-    }
-
-    /* ── Disease Info Card ── */
-    .disease-card {
-        background: #f0f4ff;
-        border-left: 4px solid #1a73e8;
-        border-radius: 10px;
-        padding: 1rem 1.2rem;
-        margin-top: 1rem;
-        font-size: 0.93rem;
-        line-height: 1.75;
-        color: #333;
-    }
-    .disease-card-title {
-        font-weight: 600;
-        color: #1a73e8;
-        margin-bottom: 0.3rem;
-        font-size: 0.95rem;
-    }
-    .disease-card-text { color: #444; }
-
-    /* ── Warning Box ── */
-    .disclaimer {
-        background: #fff8e1;
-        border-left: 4px solid #f9a825;
-        border-radius: 10px;
-        padding: 0.85rem 1.1rem;
-        font-size: 0.84rem;
-        color: #7a5c00;
-        margin-top: 2rem;
-        line-height: 1.6;
-    }
-
-    /* ── Card wrapper ── */
-    .card {
-        background: white;
+    /* ── Image Cards ── */
+    .img-card {
+        background: #ffffff;
+        border: 1px solid #e4e9f2;
         border-radius: 14px;
-        padding: 1.2rem 1.4rem;
+        padding: 0.75rem;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        max-width: 230px;
+        margin: 0 auto;
+    }
+    .img-card-label {
+        font-size: 0.68rem; font-weight: 600;
+        letter-spacing: 0.15em; text-transform: uppercase;
+        color: #8492a6; margin-top: 0.6rem; display: block;
+    }
+    [data-testid="stImage"] img {
+        border-radius: 10px; width: 100%;
+        max-height: 200px; object-fit: cover;
+    }
+
+    /* ── Result Box ── */
+    .result-box {
+        background: #ffffff;
+        border: 1px solid #e4e9f2;
+        border-radius: 16px;
+        padding: 1.4rem 1.6rem;
         box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         margin-bottom: 1rem;
     }
 
-    /* ── Prob bar label ── */
-    .prob-label {
-        font-size: 0.88rem;
-        color: #444;
-        margin-bottom: 3px;
+    /* ── Diagnosis ── */
+    .diag-label {
+        font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em;
+        text-transform: uppercase; color: #8492a6; margin-bottom: 0.5rem;
+    }
+    .diag-name {
+        font-size: 1.6rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15;
+    }
+    .confidence-label {
+        font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em;
+        text-transform: uppercase; color: #8492a6;
+        margin-bottom: 0.3rem; margin-top: 1rem;
+    }
+    .confidence-value {
+        font-size: 2.5rem; font-weight: 800; color: #1a1f36; line-height: 1;
+    }
+    .confidence-value span { font-size: 1rem; font-weight: 400; color: #8492a6; }
+
+    /* ── Progress Bar ── */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #1a73e8, #1565c0) !important;
+        border-radius: 999px !important;
+    }
+    .stProgress > div > div {
+        background: #e8f0fe !important;
+        border-radius: 999px !important; height: 8px !important;
+    }
+
+    /* ── Disease Info Card ── */
+    .disease-card {
+        background: #f0f7ff;
+        border-left: 4px solid #1a73e8;
+        border-radius: 10px;
+        padding: 1rem 1.2rem; margin-top: 1rem;
+    }
+    .disease-card-title {
+        font-size: 0.88rem; font-weight: 700; color: #1a73e8; margin-bottom: 0.35rem;
+    }
+    .disease-card-text { font-size: 0.85rem; color: #444c5e; line-height: 1.65; }
+
+    /* ── Section label ── */
+    .section-label {
+        font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em;
+        text-transform: uppercase; color: #8492a6; margin-bottom: 0.7rem;
     }
 
     /* ── Expander ── */
     [data-testid="stExpander"] {
-        background: white !important;
-        border: 1px solid #e0eaff !important;
+        background: #ffffff !important;
+        border: 1px solid #e4e9f2 !important;
         border-radius: 12px !important;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.04) !important;
     }
-    [data-testid="stExpander"] summary { color: #1a73e8 !important; font-weight: 500; }
+    [data-testid="stExpander"] summary {
+        color: #1a73e8 !important; font-weight: 600; font-size: 0.9rem;
+    }
 
-    /* ── Img card label ── */
-    .img-card-label {
-        font-size: 0.75rem;
-        color: #888;
-        text-align: center;
-        margin-top: 0.4rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
+    /* ── Disclaimer ── */
+    .disclaimer {
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: 12px; padding: 0.9rem 1.2rem;
+        font-size: 0.8rem; color: #92400e;
+        text-align: center; margin-top: 2.5rem; line-height: 1.6;
+    }
+
+    /* ── Grad-CAM label ── */
+    .gradcam-label {
+        font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em;
+        text-transform: uppercase; color: #8492a6;
+        text-align: center; margin-top: 0.5rem;
     }
 
     /* ── Sidebar ── */
-    [data-testid="stSidebar"] { background: #ffffff !important; border-right: 1px solid #e8edf5; }
+    [data-testid="stSidebar"] {
+        background: #ffffff !important;
+        border-right: 1px solid #e4e9f2;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================
 # Constants
 # ==============================
-MODEL_PATH = "model.h5"
-FILE_ID    = "11tjmQJITN0zHQ7x2wMPOF9L1JWnoZTxQ"
+MODEL_PATH = "best_efficientnetb3.h5"
+FILE_ID    = "1qnrKRAWa7UU5YbtT2UqGDbJij7uH6dIz"
 
 # ==============================
 # Disease Info
@@ -204,44 +207,54 @@ disease_info = {
     "Diabetic Retinopathy": {
         "desc":   "تلف في أوعية الدم الدقيقة بشبكية العين نتيجة مرض السكري. يُعدّ من الأسباب الرئيسية للعمى لدى البالغين.",
         "action": "يُنصح بفحص دوري كل 6 أشهر ومراقبة مستوى السكر في الدم.",
-        "icon": "🩺", "color": "#e74c3c"
+        "icon": "🩺"
     },
     "Disc Edema": {
         "desc":   "تورم في القرص البصري قد يشير إلى ارتفاع ضغط الدم داخل الجمجمة أو اضطرابات عصبية.",
         "action": "يتطلب تقييمًا عصبيًا عاجلاً وصور أشعة للدماغ.",
-        "icon": "🧠", "color": "#e74c3c"
+        "icon": "🧠"
     },
     "Healthy": {
         "desc":   "لم يُكتشف أي مؤشر مرضي. تبدو شبكية العين سليمة وبحالة جيدة.",
         "action": "حافظ على فحوصات دورية سنوية للعين للاطمئنان على صحتها.",
-        "icon": "✅", "color": "#27ae60"
+        "icon": "✅"
     },
     "Myopia": {
         "desc":   "قِصَر النظر: صعوبة في رؤية الأشياء البعيدة بوضوح بسبب طول محور مقلة العين.",
         "action": "يمكن تصحيحه بالنظارات أو العدسات اللاصقة أو جراحة الليزر.",
-        "icon": "👓", "color": "#f39c12"
+        "icon": "👓"
     },
     "Pterygium": {
         "desc":   "نسيج ليفي وعائي ينمو على سطح القرنية من الملتحمة، وقد يؤثر على الرؤية.",
         "action": "قد يحتاج إلى استئصال جراحي إذا تقدّم نحو مركز القرنية.",
-        "icon": "🔬", "color": "#f39c12"
+        "icon": "🔬"
     },
     "Retinal Detachment": {
         "desc":   "انفصال الشبكية عن طبقة الظهارة الصباغية، وهو طارئ طبي يستوجب تدخلاً فوريًا.",
-        "action": "توجّه فورًا إلى أقرب طوارئ عيون — التأخير قد يؤدي لفقدان البصر نهائيًا.",
-        "icon": "🚨", "color": "#c0392b"
+        "action": "توجّه فورًا إلى أقرب طوارئ عيون — يمكن أن يؤدي التأخير إلى فقدان البصر نهائيًا.",
+        "icon": "🚨"
     },
     "Retinitis Pigmentosa": {
         "desc":   "مجموعة اضطرابات وراثية تُسبب تدهورًا تدريجيًا في خلايا الشبكية المستقبلة للضوء.",
         "action": "لا يوجد علاج شافٍ حتى الآن؛ التدبير يركز على إبطاء التقدم وتحسين جودة الحياة.",
-        "icon": "🧬", "color": "#e74c3c"
+        "icon": "🧬"
     },
+}
+
+severity_color = {
+    "Healthy":               "#16a34a",
+    "Myopia":                "#d97706",
+    "Pterygium":             "#d97706",
+    "Diabetic Retinopathy":  "#dc2626",
+    "Disc Edema":            "#dc2626",
+    "Retinal Detachment":    "#b91c1c",
+    "Retinitis Pigmentosa":  "#dc2626",
 }
 
 # ==============================
 # Load Model
 # ==============================
-@st.cache_resource(show_spinner=False)
+@st.cache_resource
 def load_model_cached():
     if not os.path.exists(MODEL_PATH):
         with st.spinner("⬇️ جاري تحميل النموذج..."):
@@ -276,26 +289,38 @@ def preprocess(img):
     return np.expand_dims(arr, axis=0)
 
 def predict(img, model):
-    preds = model.predict(preprocess(img), verbose=0)
-    idx   = np.argmax(preds)
+    preds = model.predict(preprocess(img))
+    idx = np.argmax(preds[0])
     return class_names[idx], float(np.max(preds)), preds[0]
+
+def overlay_heatmap(img, heatmap):
+    arr = np.array(img.resize((300, 300)))
+    return cv2.addWeighted(arr, 0.75, heatmap, 0.25, 0)
 
 def gradcam(img, model):
     arr = np.array(img.resize((300, 300)))
     arr = tf.keras.applications.efficientnet.preprocess_input(arr)
     arr = np.expand_dims(arr, axis=0)
+
     target_layer = next(
         (l for l in reversed(model.layers) if isinstance(l, tf.keras.layers.Conv2D)), None
     )
-    if target_layer is None:
-        raise ValueError("No Conv2D layer found")
     grad_model = tf.keras.models.Model(
         inputs=model.inputs,
         outputs=[target_layer.output, model.output]
     )
     with tf.GradientTape() as tape:
-        conv_outputs, predictions = grad_model(arr)
-        loss = predictions[:, tf.argmax(predictions[0])]
+        outputs      = grad_model(arr)
+        conv_outputs = outputs[0]
+        predictions  = outputs[1]
+        if isinstance(predictions, list):
+            predictions = predictions[0]
+        if predictions.shape[-1] == 1:
+            loss = predictions[:, 0]
+        else:
+            class_idx = tf.argmax(predictions[0]).numpy()
+            loss = predictions[:, class_idx]
+
     grads   = tape.gradient(loss, conv_outputs)
     grads   = grads / (tf.reduce_mean(tf.abs(grads)) + 1e-8)
     weights = tf.reduce_mean(grads, axis=(1, 2))
@@ -307,18 +332,18 @@ def gradcam(img, model):
     cam = cv2.resize(cam, (300, 300))
     return cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
 
-def overlay_heatmap(img, heatmap):
-    arr = np.array(img.resize((300, 300)))
-    return cv2.addWeighted(arr, 0.6, heatmap, 0.4, 0)
-
 # ==============================
-# Header
+# Hero Header
 # ==============================
-st.markdown('<div class="main-title">👁️ Eye Disease AI Diagnosis</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="sub-title">Upload a retinal fundus image for AI-powered disease classification and visual explanation</div>',
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div class="hero">
+    <div class="hero-eyebrow">AI-Powered Ophthalmology</div>
+    <h1 class="hero-title">Assistant For Detection Of <span>Retinal Diseases</span></h1>
+    <p class="hero-subtitle">
+        نظام ذكاء اصطناعي لتحليل صور قاع العين وكشف الأمراض باستخدام EfficientNet و Grad-CAM
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # ==============================
 # Load Model
@@ -326,104 +351,134 @@ st.markdown(
 model = load_model_cached()
 
 # ==============================
-# Upload
+# Layout
 # ==============================
-uploaded_file = st.file_uploader(
-    "Upload retinal fundus image",
-    type=["jpg", "jpeg", "png"],
-    label_visibility="collapsed"
-)
+left_col, right_col = st.columns([1, 1.6], gap="large")
 
-st.markdown("---")
+with left_col:
+    st.markdown('<div class="upload-label">رفع صورة العين</div>', unsafe_allow_html=True)
+    st.markdown('<div class="upload-hint">الصيغ المدعومة: JPG · PNG</div>', unsafe_allow_html=True)
+    st.markdown('<br>', unsafe_allow_html=True)
 
-# ==============================
-# Main
-# ==============================
-if uploaded_file:
-    image = Image.open(uploaded_file).convert("RGB")
+    uploaded_file = st.file_uploader(
+        label="اختر صورة",
+        type=["jpg", "jpeg", "png"],
+        label_visibility="collapsed"
+    )
 
-    with st.spinner("🔍 Analyzing image…"):
-        pred, conf, all_preds = predict(image, model)
-        heatmap = gradcam(image, model)
-        overlay = overlay_heatmap(image, heatmap)
+    if uploaded_file:
+        image = Image.open(uploaded_file).convert("RGB")
+        thumb = image.copy()
+        thumb.thumbnail((210, 210))
+        st.markdown('<div class="img-card">', unsafe_allow_html=True)
+        st.image(thumb, use_container_width=False, width=220)
+        st.markdown('<span class="img-card-label">الصورة الأصلية</span></div>', unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="upload-section">
+            <div style="font-size:2.5rem; margin-bottom:0.75rem;">👁️</div>
+            <div style="font-size:0.9rem; color:#8492a6; font-weight:500;">
+                اسحب وأفلت الصورة هنا<br>
+                <span style="font-size:0.8rem; color:#b0bac9;">أو انقر للاختيار</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    info  = disease_info.get(pred, {})
-    color = info.get("color", "#1a73e8")
+with right_col:
+    if uploaded_file:
+        with st.spinner("🔍 جاري التحليل..."):
+            pred, conf, all_preds = predict(image, model)
+            heatmap = gradcam(image, model)
+            overlay = overlay_heatmap(image, heatmap)
 
-    # ── Row 1: Image | Diagnosis ──────────────────────────────────────────
-    col1, col2 = st.columns([1, 1.4], gap="large")
+        color = severity_color.get(pred, "#1a73e8")
+        info  = disease_info.get(pred, {})
 
-    with col1:
-        st.markdown('<div class="section-header">📷 Input Image</div>', unsafe_allow_html=True)
-        st.image(image, use_container_width=True)
+        # ── Diagnosis Result ──
+        st.markdown('<div class="result-box">', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="diag-label">نتيجة التشخيص</div>
+        <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:1rem;">
+            <span style="font-size:1.7rem;">{info.get('icon','🔬')}</span>
+            <span class="diag-name" style="color:{color};">{pred}</span>
+        </div>
+        <div class="confidence-label">مستوى الثقة</div>
+        <div class="confidence-value">{conf*100:.1f}<span>%</span></div>
+        """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    with col2:
-        st.markdown('<div class="section-header">🔬 Diagnosis Result</div>', unsafe_allow_html=True)
-
-        # Badge
-        st.markdown(
-            f'<div class="disease-badge" style="background:{color};">'
-            f'{info.get("icon","🔬")} {pred}</div>',
-            unsafe_allow_html=True
-        )
-
-        # Confidence
-        st.markdown('<div class="confidence-label">Confidence Score</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="confidence-value">{conf*100:.1f}<span>%</span></div>', unsafe_allow_html=True)
         st.progress(int(conf * 100))
 
-        # Disease info card
+        # ── Disease Info Card ──
         if info:
             st.markdown(f"""
             <div class="disease-card">
-                <div class="disease-card-title">📋 About this condition</div>
+                <div class="disease-card-title">📋 عن هذه الحالة</div>
                 <div class="disease-card-text">{info['desc']}</div>
-                <div style="margin-top:0.6rem; padding-top:0.6rem;
-                            border-top:1px solid #d0dff8;">
-                    <span style="color:#1a73e8; font-weight:600; font-size:0.85rem;">Recommendation: </span>
+                <div style="margin-top:0.65rem; padding-top:0.65rem;
+                            border-top:1px solid #c3d4f0;">
+                    <span style="font-size:0.78rem; color:#1a73e8; font-weight:600;">التوصية: </span>
                     <span class="disease-card-text">{info['action']}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-    # ── All Probabilities ─────────────────────────────────────────────────
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="section-header">📊 All Class Probabilities</div>', unsafe_allow_html=True)
-    with st.expander("Show all probabilities"):
-        for name, prob in sorted(zip(class_names, all_preds), key=lambda x: -x[1]):
-            pct = float(prob) * 100
-            bar_color = color if name == pred else "#dde8ff"
-            label_color = color if name == pred else "#555"
-            st.markdown(
-                f'<div class="prob-label" style="color:{label_color}; font-weight:{"600" if name==pred else "400"};">'
-                f'{name} — {pct:.1f}%</div>',
-                unsafe_allow_html=True
-            )
-            st.progress(float(prob))
+        # ── Grad-CAM ──
+        st.markdown('<br>', unsafe_allow_html=True)
+        st.markdown('<div class="section-label">التحليل البصري — Grad-CAM</div>', unsafe_allow_html=True)
 
-    # ── Grad-CAM ──────────────────────────────────────────────────────────
-    st.markdown("---")
-    st.markdown('<div class="section-header">🔥 Grad-CAM Activation Map</div>', unsafe_allow_html=True)
+        v1, v2 = st.columns(2, gap="medium")
+        with v1:
+            st.markdown('<div class="img-card">', unsafe_allow_html=True)
+            st.image(heatmap, width=200, channels="BGR")
+            st.markdown('<span class="img-card-label">خريطة الحرارة</span></div>', unsafe_allow_html=True)
+        with v2:
+            st.markdown('<div class="img-card">', unsafe_allow_html=True)
+            st.image(overlay, width=200, channels="BGR")
+            st.markdown('<span class="img-card-label">الصورة المدمجة</span></div>', unsafe_allow_html=True)
 
-    c1, c2, c3 = st.columns(3, gap="medium")
-    with c1:
-        st.image(image, use_container_width=True)
-        st.markdown('<div class="img-card-label">Original</div>', unsafe_allow_html=True)
-    with c2:
-        st.image(heatmap, use_container_width=True, channels="BGR")
-        st.markdown('<div class="img-card-label">Heatmap</div>', unsafe_allow_html=True)
-    with c3:
-        st.image(overlay, use_container_width=True, channels="BGR")
-        st.markdown('<div class="img-card-label">Overlay</div>', unsafe_allow_html=True)
+        # ── All Probabilities ──
+        st.markdown('<br>', unsafe_allow_html=True)
+        with st.expander("📊 جميع الاحتمالات"):
+            for i in np.argsort(all_preds)[::-1]:
+                pct       = float(all_preds[i]) * 100
+                is_pred   = class_names[i] == pred
+                bar_color = color if is_pred else "#c3d4f0"
+                txt_color = "#1a1f36" if is_pred else "#6b7280"
+                weight    = "600" if is_pred else "400"
+                st.markdown(f"""
+                <div style="display:flex; align-items:center; gap:0.75rem;
+                             margin-bottom:0.55rem; font-size:0.83rem;">
+                    <div style="width:165px; color:{txt_color}; font-weight:{weight};
+                                white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        {class_names[i]}
+                    </div>
+                    <div style="flex:1; background:#e8f0fe; border-radius:999px;
+                                height:6px; overflow:hidden;">
+                        <div style="width:{pct:.1f}%; height:100%;
+                                    background:{bar_color}; border-radius:999px;"></div>
+                    </div>
+                    <div style="width:44px; text-align:right; color:#8492a6;">{pct:.1f}%</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-    # ── Disclaimer ────────────────────────────────────────────────────────
-    st.markdown("""
-    <div class="disclaimer">
-        ⚠️ <strong>Medical Disclaimer:</strong> This tool is for research purposes only and is
-        not a substitute for professional medical advice, diagnosis, or treatment.
-        Always consult a qualified ophthalmologist.
-    </div>
-    """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="display:flex; flex-direction:column; align-items:center;
+                    justify-content:center; height:320px; text-align:center; opacity:0.35;">
+            <div style="font-size:3.5rem; margin-bottom:1rem;">🔬</div>
+            <div style="font-size:1.05rem; font-weight:600; color:#8492a6;">
+                في انتظار صورة للتحليل
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-else:
-    st.info("👆 Upload a retinal fundus image to begin diagnosis.")
+# ==============================
+# Disclaimer
+# ==============================
+st.markdown("""
+<div class="disclaimer">
+    ⚠️ <strong>تنبيه طبي:</strong> هذا النظام أداةٌ مساعدة للفحص الأولي ولا يُغني عن استشارة طبيب متخصص.
+    يُرجى مراجعة طبيب عيون معتمد للتشخيص النهائي والعلاج المناسب.
+</div>
+""", unsafe_allow_html=True)
