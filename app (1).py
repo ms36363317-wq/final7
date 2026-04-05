@@ -558,11 +558,11 @@ model = load_model_cached()
 # ==============================
 # Sidebar — LLM Settings
 # ==============================
-# ── Diseases Panel ──
+# ── Diseases Panel ──# ── Diseases Panel ──
 st.markdown("""
 <div style="display:flex; gap:0.8rem;">
 
-    <!-- العمود الشمال -->
+    <!-- الامراض -->
     <div style="flex:1;">
         <div style="font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700;
                     color:#16a34a; margin-bottom:0.9rem; padding-bottom:0.5rem;
@@ -581,7 +581,7 @@ st.markdown("""
         </div>
     </div>
 
-    <!-- العمود اليمين -->
+    <!-- الامراض -->
     <div style="flex:2;">
         <div style="font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700;
                     color:#16a34a; margin-bottom:0.9rem; padding-bottom:0.5rem;
