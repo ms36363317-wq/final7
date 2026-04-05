@@ -13,7 +13,7 @@ from PIL import Image
 # ==============================
 st.set_page_config(
     page_title="Assistant For Detection Of Retinal Diseases",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # ==============================
@@ -82,7 +82,8 @@ st.markdown("""
     }
     .hero-subtitle {
         font-size: 1rem; font-weight: 300; color: #4b7a5e;
-        max-width: 520px; margin: 0 auto; line-height: 1.75;
+        max-width: 600px; margin: 0 auto; line-height: 1.75;
+        text-align: center; display: block; width: 100%;
     }
 
     .divider {
@@ -542,7 +543,7 @@ st.markdown("""
 <div class="hero">
     <div class="hero-eyebrow">AI-Powered Ophthalmology</div>
     <h1 class="hero-title">Assistant For Detection Of Retinal Diseases <span>AI</span></h1>
-    <p class="hero-subtitle">
+    <p class="hero-subtitle" style="text-align:center; margin-left:auto; margin-right:auto; display:block; width:100%;">
         نظام ذكاء اصطناعي لتحليل صور قاع العين وكشف الأمراض بدقة عالية باستخدام EfficientNet و Grad-CAM و Ollama LLM
     </p>
 </div>
@@ -558,6 +559,83 @@ model = load_model_cached()
 # Sidebar — LLM Settings
 # ==============================
 with st.sidebar:
+    # ── Diseases Panel ──
+    st.markdown("""
+    <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
+                color:#16a34a; margin-bottom:1rem; padding-bottom:0.5rem;
+                border-bottom:2px solid rgba(22,163,74,0.25);">
+        🔬 الأمراض المكتشفة
+    </div>
+    <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem;">
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #ef4444;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🩺</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Diabetic Retinopathy</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">اعتلال الشبكية السكري</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #ef4444;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🧠</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Disc Edema</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">وذمة القرص البصري</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #22c55e;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">✅</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Healthy</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">شبكية سليمة</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">👓</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Myopia</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">قِصَر النظر</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🔬</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Pterygium</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">الظفرة</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #dc2626;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🚨</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Retinal Detachment</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">انفصال الشبكية</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #ef4444;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🧬</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Retinitis Pigmentosa</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">التهاب الشبكية الصباغي</div>
+            </div>
+        </div>
+    </div>
+    <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(22,163,74,0.3),transparent);
+                margin-bottom:1.2rem;"></div>
+    """, unsafe_allow_html=True)
+
+    # ── LLM Settings ──
     st.markdown("""
     <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
                 color:#16a34a; margin-bottom:1rem; padding-bottom:0.5rem;
