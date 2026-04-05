@@ -553,7 +553,7 @@ st.markdown("""
 model = load_model_cached()
 
 # ==============================
-# SIDEBAR: الأمراض فقط
+# SIDEBAR: الأمراض فقط (بدون أي إعدادات LLM)
 # ==============================
 with st.sidebar:
     st.markdown("""
@@ -704,7 +704,7 @@ with right_col:
             """, unsafe_allow_html=True)
 
         # ==============================
-        # LLM SETTINGS (تم نقلها إلى الواجهة الرئيسية)
+        # LLM SETTINGS (في الواجهة الرئيسية داخل expander)
         # ==============================
         with st.expander("⚙️ إعدادات شرح النموذج اللغوي (LLM)"):
             enable_llm = st.toggle("تفعيل شرح LLM", value=True)
