@@ -13,196 +13,195 @@ from PIL import Image
 # ==============================
 st.set_page_config(
     page_title="Assistant For Detection Of Retinal Diseases",
-    page_icon="👁️",
-    layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # ==============================
-# Custom CSS — Light Theme
+# Custom CSS
 # ==============================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 
-    /* ── Background & Base ── */
-    .stApp { background: #38bdf8; color: #1a1f36; }
+    .stApp {
+        background: linear-gradient(160deg, #0f1a2e 0%, #111827 50%, #0d1b2a 100%);
+        color: #dde8f5;
+    }
+
     #MainMenu, footer, header { visibility: hidden; }
     .block-container { padding: 0 2rem 4rem; max-width: 1200px; }
 
     /* ── Hero ── */
     .hero {
+        position: relative;
         text-align: center;
-        padding: 3rem 2rem 2rem;
-        background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
-        border-radius: 0 0 28px 28px;
-        margin: 0 -2rem 2.5rem;
+        padding: 3.5rem 2rem 2.5rem;
+        overflow: hidden;
+    }
+    .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(ellipse 70% 50% at 50% 0%, rgba(56,189,248,0.09) 0%, transparent 65%),
+            radial-gradient(ellipse 35% 25% at 15% 85%, rgba(99,102,241,0.07) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 30% at 85% 75%, rgba(14,165,233,0.05) 0%, transparent 55%);
+        pointer-events: none;
     }
     .hero-eyebrow {
-        font-size: 0.72rem; font-weight: 600; letter-spacing: 0.28em;
-        text-transform: uppercase; color: rgba(255,255,255,0.7);
-        margin-bottom: 0.6rem;
+        font-size: 0.75rem; font-weight: 500; letter-spacing: 0.25em;
+        text-transform: uppercase; color: #38bdf8; margin-bottom: 0.75rem;
     }
     .hero-title {
-        font-size: clamp(1.8rem, 4vw, 2.8rem);
-        font-weight: 800; line-height: 1.1;
-        color: #ffffff; margin: 0 0 0.75rem;
-        letter-spacing: -0.02em;
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(2.4rem, 5vw, 4rem);
+        font-weight: 800; line-height: 1.05;
+        letter-spacing: -0.02em; color: #eaf2ff; margin: 0 0 1rem;
     }
-    .hero-title span { color: #82cfff; }
+    .hero-title span {
+        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
     .hero-subtitle {
-        font-size: 0.95rem; font-weight: 400;
-        color: rgba(255,255,255,0.75);
-        max-width: 520px; margin: 0 auto; line-height: 1.65;
+        font-size: 1rem; font-weight: 300; color: #7a9ab8;
+        max-width: 520px; margin: 0 auto; line-height: 1.75;
+    }
+
+    .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(56,189,248,0.25), transparent);
+        margin: 0 0 2.5rem;
     }
 
     /* ── Upload ── */
-    .upload-label {
-        font-size: 1rem; font-weight: 600; color: #1a1f36; margin-bottom: 0.3rem;
-    }
-    .upload-hint { font-size: 0.82rem; color: #8492a6; }
     .upload-section {
-        background: #ffffff;
-        border: 2px dashed #c3d4f0;
-        border-radius: 16px; padding: 2.2rem 2rem;
-        text-align: center; margin-bottom: 1.5rem;
+        background: rgba(255,255,255,0.04);
+        border: 1.5px dashed rgba(56,189,248,0.22);
+        border-radius: 20px; padding: 2.5rem 2rem;
+        text-align: center; margin-bottom: 2rem;
+        transition: border-color 0.2s ease;
     }
+    .upload-section:hover {
+        border-color: rgba(56,189,248,0.4);
+    }
+    .upload-label {
+        font-family: 'Syne', sans-serif; font-size: 1.1rem;
+        font-weight: 600; color: #c0d4ea; margin-bottom: 0.4rem;
+    }
+    .upload-hint { font-size: 0.82rem; color: #4e6e8a; }
+
     [data-testid="stFileUploader"] { background: transparent !important; }
-    [data-testid="stFileUploader"] > div {
-        border: 2px dashed #c3d4f0 !important;
-        border-radius: 14px !important;
-        background: #ffffff !important;
-        padding: 1.2rem !important;
-    }
-    [data-testid="stFileUploader"] label { color: #1a73e8 !important; font-weight: 500; }
+    [data-testid="stFileUploader"] > div { border: none !important; background: transparent !important; padding: 0 !important; }
+    [data-testid="stFileUploader"] label { color: #38bdf8 !important; font-size: 0.9rem; }
 
     /* ── Image Cards ── */
     .img-card {
-        background: #ffffff;
-        border: 1px solid #e4e9f2;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.09);
         border-radius: 14px;
-        padding: 0.75rem;
+        padding: 0.6rem 0.6rem 0.5rem;
         text-align: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        max-width: 230px;
+        max-width: 220px;
         margin: 0 auto;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
     }
     .img-card-label {
-        font-size: 0.68rem; font-weight: 600;
-        letter-spacing: 0.15em; text-transform: uppercase;
-        color: #8492a6; margin-top: 0.6rem; display: block;
-    }
-    [data-testid="stImage"] img {
-        border-radius: 10px; width: 100%;
-        max-height: 200px; object-fit: cover;
+        font-size: 0.68rem; font-weight: 500;
+        letter-spacing: 0.18em; text-transform: uppercase;
+        color: #4e6e8a; margin-top: 0.5rem;
     }
 
-    /* ── Diagnosis ── */
-    .diag-label {
-        font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em;
-        text-transform: uppercase; color: #8492a6; margin-bottom: 0.5rem;
+    /* ── Streamlit image ── */
+    [data-testid="stImage"] img {
+        border-radius: 10px;
+        width: 100%;
+        max-height: 200px;
+        object-fit: cover;
     }
-    .confidence-label {
-        font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em;
-        text-transform: uppercase; color: #8492a6;
-        margin-bottom: 0.3rem; margin-top: 1rem;
-    }
-    .confidence-value {
-        font-size: 2.5rem; font-weight: 800; color: #1a1f36; line-height: 1;
-    }
-    .confidence-value span { font-size: 1rem; font-weight: 400; color: #8492a6; }
 
     /* ── Progress Bar ── */
     .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #1a73e8, #1565c0) !important;
+        background: linear-gradient(90deg, #0ea5e9, #6366f1) !important;
         border-radius: 999px !important;
     }
     .stProgress > div > div {
-        background: #e8f0fe !important;
+        background: rgba(255,255,255,0.08) !important;
         border-radius: 999px !important; height: 8px !important;
     }
 
+    /* ── Confidence ── */
+    .confidence-label {
+        font-size: 0.78rem; letter-spacing: 0.15em;
+        text-transform: uppercase; color: #4e6e8a; margin-bottom: 0.5rem;
+    }
+    .confidence-value {
+        font-family: 'Syne', sans-serif; font-size: 2.4rem;
+        font-weight: 800; color: #eaf2ff; line-height: 1;
+    }
+    .confidence-value span { font-size: 1rem; font-weight: 400; color: #4e6e8a; }
+
     /* ── Disease Card ── */
     .disease-card {
-        background: #f0f7ff;
-        border-left: 4px solid #1a73e8;
-        border-radius: 10px;
-        padding: 1rem 1.2rem; margin-top: 1rem;
+        background: rgba(14,165,233,0.06);
+        border: 1px solid rgba(56,189,248,0.18);
+        border-radius: 16px; padding: 1.2rem 1.4rem; margin-top: 1rem;
+        box-shadow: 0 2px 16px rgba(14,165,233,0.06);
     }
     .disease-card-title {
-        font-size: 0.88rem; font-weight: 700; color: #1a73e8; margin-bottom: 0.35rem;
+        font-family: 'Syne', sans-serif; font-size: 0.95rem;
+        font-weight: 700; color: #38bdf8; margin-bottom: 0.4rem;
     }
-    .disease-card-text { font-size: 0.85rem; color: #444c5e; line-height: 1.65; }
+    .disease-card-text { font-size: 0.85rem; color: #7a9ab8; line-height: 1.7; }
 
-    /* ── LLM Card ── */
+    /* ── LLM Explanation Card ── */
     .llm-card {
-        background: #f3f0ff;
-        border-left: 4px solid #6366f1;
-        border-radius: 10px;
-        padding: 1rem 1.2rem;
+        background: rgba(99,102,241,0.07);
+        border: 1px solid rgba(129,140,248,0.2);
+        border-radius: 16px;
+        padding: 1.2rem 1.4rem;
         margin-top: 1rem;
+        box-shadow: 0 2px 16px rgba(99,102,241,0.06);
     }
     .llm-card-title {
-        font-size: 0.88rem; font-weight: 700; color: #6366f1;
-        margin-bottom: 0.65rem;
+        font-family: 'Syne', sans-serif; font-size: 0.95rem;
+        font-weight: 700; color: #818cf8; margin-bottom: 0.75rem;
         display: flex; align-items: center; gap: 0.4rem;
     }
     .llm-line {
-        font-size: 0.85rem; color: #374151;
-        line-height: 1.75; margin-bottom: 0.35rem;
+        font-size: 0.86rem; color: #b8cfe8;
+        line-height: 1.75; margin-bottom: 0.45rem;
         padding-left: 0.6rem;
-        border-left: 2px solid #c4b5fd;
+        border-left: 2px solid rgba(129,140,248,0.28);
     }
     .llm-error {
-        font-size: 0.82rem; color: #92400e;
-        background: #fffbeb;
-        border: 1px solid #fcd34d;
+        font-size: 0.82rem; color: #f59e0b;
+        background: rgba(245,158,11,0.08);
+        border: 1px solid rgba(245,158,11,0.2);
         border-radius: 8px; padding: 0.7rem 1rem;
         margin-top: 0.5rem;
     }
 
-    /* ── Section label ── */
-    .section-label {
-        font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em;
-        text-transform: uppercase; color: #8492a6; margin-bottom: 0.7rem;
-    }
-
-    /* ── Expander ── */
-    [data-testid="stExpander"] {
-        background: #ffffff !important;
-        border: 1px solid #e4e9f2 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 1px 6px rgba(0,0,0,0.04) !important;
-    }
-    [data-testid="stExpander"] summary {
-        color: #1a73e8 !important; font-weight: 600; font-size: 0.9rem;
+    /* ── Ollama Model Selector ── */
+    .model-selector-label {
+        font-size: 0.72rem; letter-spacing: 0.18em;
+        text-transform: uppercase; color: #4e6e8a;
+        margin-bottom: 0.4rem;
     }
 
     /* ── Disclaimer ── */
     .disclaimer {
-        background: #fffbeb;
-        border: 1px solid #fcd34d;
+        background: rgba(245,158,11,0.07);
+        border: 1px solid rgba(245,158,11,0.18);
         border-radius: 12px; padding: 0.9rem 1.2rem;
-        font-size: 0.8rem; color: #92400e;
-        text-align: center; margin-top: 2.5rem; line-height: 1.6;
+        font-size: 0.78rem; color: #8a6e2e;
+        text-align: center; margin-top: 2.5rem; line-height: 1.65;
     }
 
-    /* ── Sidebar ── */
     [data-testid="stSidebar"] {
-        background: #ffffff !important;
-        border-right: 1px solid #e4e9f2;
-    }
-    [data-testid="stSidebar"] * { color: #1a1f36; }
-
-    /* ── Sidebar code blocks ── */
-    code {
-        background: #eef2ff;
-        color: #4f46e5;
-        padding: 0.15rem 0.45rem;
-        border-radius: 4px;
-        font-size: 0.82rem;
+        background: linear-gradient(180deg, #0e1624 0%, #111827 100%) !important;
+        border-right: 1px solid rgba(255,255,255,0.07);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -210,9 +209,9 @@ st.markdown("""
 # ==============================
 # Constants
 # ==============================
-MODEL_PATH        = "best_efficientnetb3.h5"
-FILE_ID           = "1qnrKRAWa7UU5YbtT2UqGDbJij7uH6dIz"
-OLLAMA_URL        = "http://localhost:11434/api/generate"
+MODEL_PATH = "best_efficientnetb3.h5"
+FILE_ID = "1qnrKRAWa7UU5YbtT2UqGDbJij7uH6dIz"
+OLLAMA_URL = "http://localhost:11434/api/generate"
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 
 # ==============================
@@ -220,54 +219,54 @@ ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 # ==============================
 disease_info = {
     "Diabetic Retinopathy": {
-        "desc":   "تلف في أوعية الدم الدقيقة بشبكية العين نتيجة مرض السكري. يُعدّ من الأسباب الرئيسية للعمى لدى البالغين.",
+        "desc": "تلف في أوعية الدم الدقيقة بشبكية العين نتيجة مرض السكري. يُعدّ من الأسباب الرئيسية للعمى لدى البالغين.",
         "action": "يُنصح بفحص دوري كل 6 أشهر ومراقبة مستوى السكر في الدم.",
         "icon": "🩺"
     },
     "Disc Edema": {
-        "desc":   "تورم في القرص البصري قد يشير إلى ارتفاع ضغط الدم داخل الجمجمة أو اضطرابات عصبية.",
+        "desc": "تورم في القرص البصري قد يشير إلى ارتفاع ضغط الدم داخل الجمجمة أو اضطرابات عصبية.",
         "action": "يتطلب تقييمًا عصبيًا عاجلاً وصور أشعة للدماغ.",
         "icon": "🧠"
     },
     "Healthy": {
-        "desc":   "لم يُكتشف أي مؤشر مرضي. تبدو شبكية العين سليمة وبحالة جيدة.",
+        "desc": "لم يُكتشف أي مؤشر مرضي. تبدو شبكية العين سليمة وبحالة جيدة.",
         "action": "حافظ على فحوصات دورية سنوية للعين للاطمئنان على صحتها.",
         "icon": "✅"
     },
     "Myopia": {
-        "desc":   "قِصَر النظر: صعوبة في رؤية الأشياء البعيدة بوضوح بسبب طول محور مقلة العين.",
+        "desc": "قِصَر النظر: صعوبة في رؤية الأشياء البعيدة بوضوح بسبب طول محور مقلة العين.",
         "action": "يمكن تصحيحه بالنظارات أو العدسات اللاصقة أو جراحة الليزر.",
         "icon": "👓"
     },
     "Pterygium": {
-        "desc":   "نسيج ليفي وعائي ينمو على سطح القرنية من الملتحمة، وقد يؤثر على الرؤية.",
+        "desc": "نسيج ليفي وعائي ينمو على سطح القرنية من الملتحمة، وقد يؤثر على الرؤية.",
         "action": "قد يحتاج إلى استئصال جراحي إذا تقدّم نحو مركز القرنية.",
         "icon": "🔬"
     },
     "Retinal Detachment": {
-        "desc":   "انفصال الشبكية عن طبقة الظهارة الصباغية، وهو طارئ طبي يستوجب تدخلاً فوريًا.",
+        "desc": "انفصال الشبكية عن طبقة الظهارة الصباغية، وهو طارئ طبي يستوجب تدخلاً فوريًا.",
         "action": "توجّه فورًا إلى أقرب طوارئ عيون — يمكن أن يؤدي التأخير إلى فقدان البصر نهائيًا.",
         "icon": "🚨"
     },
     "Retinitis Pigmentosa": {
-        "desc":   "مجموعة اضطرابات وراثية تُسبب تدهورًا تدريجيًا في خلايا الشبكية المستقبلة للضوء.",
+        "desc": "مجموعة اضطرابات وراثية تُسبب تدهورًا تدريجيًا في خلايا الشبكية المستقبلة للضوء.",
         "action": "لا يوجد علاج شافٍ حتى الآن؛ التدبير يركز على إبطاء التقدم وتحسين جودة الحياة.",
         "icon": "🧬"
     },
 }
 
 severity_color = {
-    "Healthy":               "#16a34a",
-    "Myopia":                "#d97706",
-    "Pterygium":             "#d97706",
-    "Diabetic Retinopathy":  "#dc2626",
-    "Disc Edema":            "#dc2626",
-    "Retinal Detachment":    "#b91c1c",
-    "Retinitis Pigmentosa":  "#dc2626",
+    "Healthy": "#22c55e",
+    "Myopia": "#f59e0b",
+    "Pterygium": "#f59e0b",
+    "Diabetic Retinopathy": "#ef4444",
+    "Disc Edema": "#ef4444",
+    "Retinal Detachment": "#dc2626",
+    "Retinitis Pigmentosa": "#ef4444",
 }
 
 # ==============================
-# LLM — Ollama & Claude API
+# LLM Explanation — Ollama أو Claude API
 # ==============================
 PROMPT_TEMPLATE = """You are an ophthalmology AI assistant.
 
@@ -285,12 +284,13 @@ Structure (5 lines only, no headers, no repetition):
 
 
 def _clean_lines(text: str) -> str:
+    """خذ أول 5 أسطر غير فارغة."""
     lines = [l.strip() for l in text.split("\n") if l.strip()]
     return "\n".join(lines[:5])
 
 
 def _explain_via_ollama(disease: str, confidence: float, ollama_model: str, ollama_url: str) -> str:
-    prompt  = PROMPT_TEMPLATE.format(disease=disease, confidence=confidence * 100)
+    prompt = PROMPT_TEMPLATE.format(disease=disease, confidence=confidence * 100)
     payload = {
         "model": ollama_model,
         "prompt": prompt,
@@ -302,7 +302,7 @@ def _explain_via_ollama(disease: str, confidence: float, ollama_model: str, olla
             "num_ctx": 512,
         },
     }
-    api_url  = f"{ollama_url.rstrip('/')}/api/generate"
+    api_url = f"{ollama_url.rstrip('/')}/api/generate"
     response = requests.post(api_url, json=payload, timeout=180)
     response.raise_for_status()
     raw = response.json().get("response", "").strip()
@@ -310,6 +310,7 @@ def _explain_via_ollama(disease: str, confidence: float, ollama_model: str, olla
 
 
 def _test_ollama_connection(ollama_url: str) -> tuple:
+    """يختبر الاتصال بـ Ollama ويعيد (نجح، رسالة)."""
     try:
         r = requests.get(ollama_url.rstrip("/"), timeout=5)
         if r.status_code == 200:
@@ -324,7 +325,7 @@ def _test_ollama_connection(ollama_url: str) -> tuple:
 
 
 def _explain_via_claude(disease: str, confidence: float, api_key: str) -> str:
-    prompt   = PROMPT_TEMPLATE.format(disease=disease, confidence=confidence * 100)
+    prompt = PROMPT_TEMPLATE.format(disease=disease, confidence=confidence * 100)
     response = requests.post(
         ANTHROPIC_API_URL,
         headers={
@@ -348,8 +349,8 @@ def local_llm_explain(
     disease: str,
     confidence: float,
     ollama_model: str = "llama3",
-    ollama_url: str   = "http://localhost:11434",
-    backend: str      = "ollama",
+    ollama_url: str = "http://localhost:11434",
+    backend: str = "ollama",
     anthropic_api_key: str = "",
 ) -> str:
     try:
@@ -359,6 +360,7 @@ def local_llm_explain(
             return _explain_via_claude(disease, confidence, anthropic_api_key.strip())
         else:
             return _explain_via_ollama(disease, confidence, ollama_model, ollama_url)
+
     except requests.exceptions.ConnectionError:
         if backend == "ollama":
             return f"ERROR: تعذّر الاتصال بـ Ollama على {ollama_url} — تأكد أن: ollama serve يعمل"
@@ -385,16 +387,23 @@ def load_model_cached():
         with st.spinner("⬇️ جاري تحميل النموذج..."):
             gdown.download(
                 f"https://drive.google.com/uc?id={FILE_ID}",
-                MODEL_PATH, quiet=False
+                MODEL_PATH,
+                quiet=False
             )
+
     if not os.path.exists(MODEL_PATH):
-        st.error("❌ النموذج غير موجود"); st.stop()
+        st.error("❌ النموذج غير موجود")
+        st.stop()
+
     if os.path.getsize(MODEL_PATH) < 5_000_000:
-        st.error("❌ ملف النموذج تالف"); st.stop()
+        st.error("❌ ملف النموذج تالف")
+        st.stop()
+
     try:
         return load_model(MODEL_PATH)
     except Exception as e:
-        st.error(f"❌ فشل تحميل النموذج: {e}"); st.stop()
+        st.error(f"❌ فشل تحميل النموذج: {e}")
+        st.stop()
 
 
 # ==============================
@@ -417,7 +426,7 @@ def preprocess(img):
 
 def predict(img, model):
     preds = model.predict(preprocess(img))
-    idx   = np.argmax(preds[0])
+    idx = np.argmax(preds[0])
     return class_names[idx], float(np.max(preds)), preds[0]
 
 
@@ -432,33 +441,42 @@ def gradcam(img, model):
     arr = np.expand_dims(arr, axis=0)
 
     target_layer = next(
-        (l for l in reversed(model.layers) if isinstance(l, tf.keras.layers.Conv2D)), None
+        (l for l in reversed(model.layers) if isinstance(l, tf.keras.layers.Conv2D)),
+        None
     )
+
     grad_model = tf.keras.models.Model(
         inputs=model.inputs,
         outputs=[target_layer.output, model.output]
     )
+
     with tf.GradientTape() as tape:
-        outputs      = grad_model(arr)
+        outputs = grad_model(arr)
         conv_outputs = outputs[0]
-        predictions  = outputs[1]
+        predictions = outputs[1]
+
         if isinstance(predictions, list):
             predictions = predictions[0]
+
         if predictions.shape[-1] == 1:
             loss = predictions[:, 0]
         else:
             class_idx = tf.argmax(predictions[0]).numpy()
             loss = predictions[:, class_idx]
 
-    grads   = tape.gradient(loss, conv_outputs)
-    grads   = grads / (tf.reduce_mean(tf.abs(grads)) + 1e-8)
+    grads = tape.gradient(loss, conv_outputs)
+    grads = grads / (tf.reduce_mean(tf.abs(grads)) + 1e-8)
+
     weights = tf.reduce_mean(grads, axis=(1, 2))
-    cam     = tf.reduce_sum(weights[:, None, None, :] * conv_outputs, axis=-1)[0].numpy()
-    cam     = np.maximum(cam, 0)
+    cam = tf.reduce_sum(weights[:, None, None, :] * conv_outputs, axis=-1)[0].numpy()
+
+    cam = np.maximum(cam, 0)
     if np.max(cam) > 0:
         cam /= np.max(cam)
+
     cam = np.power(cam, 0.3)
     cam = cv2.resize(cam, (300, 300))
+
     return cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
 
 
@@ -468,15 +486,16 @@ def gradcam(img, model):
 st.markdown("""
 <div class="hero">
     <div class="hero-eyebrow">AI-Powered Ophthalmology</div>
-    <h1 class="hero-title">Assistant For Detection Of <span>Retinal Diseases</span></h1>
+    <h1 class="hero-title">Assistant For Detection Of Retinal Diseases <span>AI</span></h1>
     <p class="hero-subtitle">
-        نظام ذكاء اصطناعي لتحليل صور قاع العين وكشف الأمراض باستخدام EfficientNet و Grad-CAM
+        نظام ذكاء اصطناعي لتحليل صور قاع العين وكشف الأمراض بدقة عالية باستخدام EfficientNet و Grad-CAM و Ollama LLM
     </p>
 </div>
+<div class="divider"></div>
 """, unsafe_allow_html=True)
 
 # ==============================
-# Load Model
+# Load Vision Model
 # ==============================
 model = load_model_cached()
 
@@ -485,9 +504,9 @@ model = load_model_cached()
 # ==============================
 with st.sidebar:
     st.markdown("""
-    <div style="font-size:1rem; font-weight:700; color:#6366f1;
-                margin-bottom:1rem; padding-bottom:0.5rem;
-                border-bottom:1px solid #e4e9f2;">
+    <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
+                color:#818cf8; margin-bottom:1rem; padding-bottom:0.5rem;
+                border-bottom:1px solid rgba(129,140,248,0.2);">
         ⚙️ إعدادات النموذج اللغوي
     </div>
     """, unsafe_allow_html=True)
@@ -517,6 +536,7 @@ with st.sidebar:
         )
         anthropic_api_key = ""
 
+        # زر اختبار الاتصال
         if st.button("🔌 اختبار الاتصال بـ Ollama", use_container_width=True):
             ok, msg = _test_ollama_connection(ollama_url)
             if ok:
@@ -525,19 +545,21 @@ with st.sidebar:
                 st.error(msg)
 
         st.markdown("""
-        <div style="margin-top:1.2rem; font-size:0.78rem; color:#6b7280; line-height:2.1;">
-            <span style="font-weight:600; color:#374151;">تشغيل Ollama:</span><br>
-            <code>ollama serve</code>
+        <div style="margin-top:1.2rem; font-size:0.75rem; color:#3a5a76; line-height:2;">
+            <span style="color:#5a7a96; font-weight:500;">تشغيل Ollama:</span><br>
+            <code style="background:rgba(56,189,248,0.08); color:#38bdf8;
+                         padding:0.15rem 0.5rem; border-radius:4px;">ollama serve</code>
             <br><br>
-            <span style="font-weight:600; color:#374151;">تحميل نموذج:</span><br>
-            <code>ollama pull llama3</code>
+            <span style="color:#5a7a96; font-weight:500;">تحميل نموذج:</span><br>
+            <code style="background:rgba(56,189,248,0.08); color:#38bdf8;
+                         padding:0.15rem 0.5rem; border-radius:4px;">ollama pull llama3</code>
         </div>
         """, unsafe_allow_html=True)
 
     # ── Claude API settings ──
     else:
-        ollama_model      = "llama3"
-        ollama_url        = "http://localhost:11434"
+        ollama_model = "llama3"
+        ollama_url = "http://localhost:11434"
         anthropic_api_key = st.text_input(
             "Anthropic API Key",
             type="password",
@@ -545,10 +567,13 @@ with st.sidebar:
             help="احصل على مفتاحك من: console.anthropic.com"
         )
         st.markdown("""
-        <div style="margin-top:1rem; font-size:0.78rem; color:#6b7280; line-height:1.9;">
-            النموذج المستخدم: <code>claude-haiku</code><br>
+        <div style="margin-top:1rem; font-size:0.75rem; color:#3a5a76; line-height:1.8;">
+            النموذج المستخدم:
+            <code style="background:rgba(129,140,248,0.1); color:#818cf8;
+                         padding:0.1rem 0.4rem; border-radius:4px;">claude-haiku</code>
+            <br>
             <a href="https://console.anthropic.com" target="_blank"
-               style="color:#1a73e8; text-decoration:none;">← احصل على API Key</a>
+               style="color:#38bdf8; text-decoration:none;">← احصل على API Key</a>
         </div>
         """, unsafe_allow_html=True)
 
@@ -574,15 +599,12 @@ with left_col:
         thumb.thumbnail((210, 210))
         st.markdown('<div class="img-card">', unsafe_allow_html=True)
         st.image(thumb, use_container_width=False, width=220)
-        st.markdown('<span class="img-card-label">الصورة الأصلية</span></div>', unsafe_allow_html=True)
+        st.markdown('<div class="img-card-label">الصورة الأصلية</div></div>', unsafe_allow_html=True)
     else:
         st.markdown("""
         <div class="upload-section">
-            <div style="font-size:2.5rem; margin-bottom:0.75rem;">👁️</div>
-            <div style="font-size:0.9rem; color:#8492a6; font-weight:500;">
-                اسحب وأفلت الصورة هنا<br>
-                <span style="font-size:0.8rem; color:#b0bac9;">أو انقر للاختيار</span>
-            </div>
+            <div style="font-size:2.5rem; margin-bottom:0.75rem; opacity:0.4">👁️</div>
+            <div style="font-size:0.88rem; color:#3a5a76;">اسحب وأفلت الصورة هنا<br>أو انقر للاختيار</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -593,16 +615,17 @@ with right_col:
             heatmap = gradcam(image, model)
             overlay = overlay_heatmap(image, heatmap)
 
-        color = severity_color.get(pred, "#1a73e8")
-        info  = disease_info.get(pred, {})
+        color = severity_color.get(pred, "#38bdf8")
+        info = disease_info.get(pred, {})
 
         # ── Diagnosis ──
         st.markdown(f"""
-        <div style="margin-bottom:1.2rem;">
-            <div class="diag-label">نتيجة التشخيص</div>
-            <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:1rem;">
+        <div style="margin-bottom:1.5rem;">
+            <div style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase;
+                        color:#5a7a96; margin-bottom:0.6rem;">نتيجة التشخيص</div>
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
                 <span style="font-size:1.8rem;">{info.get('icon','🔬')}</span>
-                <span style="font-size:1.6rem; font-weight:800;
+                <span style="font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800;
                              color:{color}; letter-spacing:-0.01em;">{pred}</span>
             </div>
             <div class="confidence-label">مستوى الثقة</div>
@@ -618,9 +641,9 @@ with right_col:
             <div class="disease-card">
                 <div class="disease-card-title">📋 عن هذه الحالة</div>
                 <div class="disease-card-text">{info['desc']}</div>
-                <div style="margin-top:0.65rem; padding-top:0.65rem;
-                            border-top:1px solid #c3d4f0;">
-                    <span style="font-size:0.78rem; color:#1a73e8; font-weight:600;">التوصية: </span>
+                <div style="margin-top:0.7rem; padding-top:0.7rem;
+                             border-top:1px solid rgba(56,189,248,0.1);">
+                    <span style="font-size:0.75rem; color:#38bdf8; font-weight:500;">التوصية: </span>
                     <span class="disease-card-text">{info['action']}</span>
                 </div>
             </div>
@@ -647,8 +670,11 @@ with right_col:
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                lines      = [l.strip() for l in llm_result.split("\n") if l.strip()]
-                lines_html = "".join(f'<div class="llm-line">{line}</div>' for line in lines)
+                lines = [l.strip() for l in llm_result.split("\n") if l.strip()]
+                lines_html = "".join(
+                    f'<div class="llm-line">{line}</div>'
+                    for line in lines
+                )
                 st.markdown(f"""
                 <div class="llm-card">
                     <div class="llm-card-title">🤖 شرح النموذج اللغوي — {backend_label}</div>
@@ -658,49 +684,45 @@ with right_col:
 
         # ── Grad-CAM ──
         st.markdown('<br>', unsafe_allow_html=True)
-        st.markdown('<div class="section-label">التحليل البصري — Grad-CAM</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase;
+                    color:#5a7a96; margin-bottom:0.75rem;">التحليل البصري — Grad-CAM</div>
+        """, unsafe_allow_html=True)
 
-        v1, v2 = st.columns(2, gap="medium")
+        v1, v2 = st.columns(2)
         with v1:
             st.markdown('<div class="img-card">', unsafe_allow_html=True)
             st.image(heatmap, width=200, channels="BGR")
-            st.markdown('<span class="img-card-label">خريطة الحرارة</span></div>', unsafe_allow_html=True)
+            st.markdown('<div class="img-card-label">خريطة الحرارة</div></div>', unsafe_allow_html=True)
         with v2:
             st.markdown('<div class="img-card">', unsafe_allow_html=True)
             st.image(overlay, width=200, channels="BGR")
-            st.markdown('<span class="img-card-label">الصورة المدمجة</span></div>', unsafe_allow_html=True)
+            st.markdown('<div class="img-card-label">الصورة المدمجة</div></div>', unsafe_allow_html=True)
 
         # ── All Probabilities ──
-        st.markdown('<br>', unsafe_allow_html=True)
         with st.expander("📊 جميع الاحتمالات"):
             for i in np.argsort(all_preds)[::-1]:
-                pct       = float(all_preds[i]) * 100
-                is_pred   = class_names[i] == pred
-                bar_color = color if is_pred else "#c3d4f0"
-                txt_color = "#1a1f36" if is_pred else "#6b7280"
-                weight    = "600" if is_pred else "400"
+                pct = float(all_preds[i]) * 100
+                bar_color = color if class_names[i] == pred else "#1e3a4a"
                 st.markdown(f"""
                 <div style="display:flex; align-items:center; gap:0.75rem;
-                             margin-bottom:0.55rem; font-size:0.83rem;">
-                    <div style="width:165px; color:{txt_color}; font-weight:{weight};
-                                white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        {class_names[i]}
-                    </div>
-                    <div style="flex:1; background:#e8f0fe; border-radius:999px;
-                                height:6px; overflow:hidden;">
+                             margin-bottom:0.5rem; font-size:0.82rem;">
+                    <div style="width:160px; color:#8ba3bf; white-space:nowrap;
+                                overflow:hidden; text-overflow:ellipsis;">{class_names[i]}</div>
+                    <div style="flex:1; background:rgba(255,255,255,0.05); border-radius:999px; height:6px; overflow:hidden;">
                         <div style="width:{pct:.1f}%; height:100%;
                                     background:{bar_color}; border-radius:999px;"></div>
                     </div>
-                    <div style="width:44px; text-align:right; color:#8492a6;">{pct:.1f}%</div>
+                    <div style="width:44px; text-align:right; color:#5a7a96;">{pct:.1f}%</div>
                 </div>
                 """, unsafe_allow_html=True)
 
     else:
         st.markdown("""
         <div style="display:flex; flex-direction:column; align-items:center;
-                    justify-content:center; height:320px; text-align:center; opacity:0.35;">
-            <div style="font-size:3.5rem; margin-bottom:1rem;">🔬</div>
-            <div style="font-size:1.05rem; font-weight:600; color:#8492a6;">
+                    justify-content:center; height:300px; opacity:0.3; text-align:center;">
+            <div style="font-size:3rem; margin-bottom:1rem;">🔬</div>
+            <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:#8ba3bf;">
                 في انتظار صورة للتحليل
             </div>
         </div>
