@@ -230,13 +230,12 @@ st.markdown("""
         border-left: 4px solid #f59e0b;
         border-radius: 12px; padding: 0.9rem 1.2rem;
         font-size: 0.78rem; color: #92400e;
-        text-align: center; margin-top: 2.5rem; line-height: 1.65;
+        text-align: center; margin-top: 1rem; line-height: 1.65;
     }
 
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%) !important;
-        border-right: 2px solid #bbf7d0 !important;
-    }
+    [data-testid="stSidebar"] { display: none !important; }
+    [data-testid="collapsedControl"] { display: none !important; }
+    button[kind="header"] { display: none !important; }
 
     /* ── Expander ── */
     .stExpander {
@@ -412,7 +411,7 @@ def local_llm_explain(
     try:
         if backend == "claude":
             if not anthropic_api_key.strip():
-                return "ERROR: أدخل Anthropic API Key في إعدادات الشرح الذكي."
+                return "ERROR: أدخل Anthropic API Key في إعدادات الشريط الجانبي."
             return _explain_via_claude(disease, confidence, anthropic_api_key.strip())
         else:
             return _explain_via_ollama(disease, confidence, ollama_model, ollama_url)
@@ -541,8 +540,7 @@ def gradcam(img, model):
 # ==============================
 st.markdown("""
 <div class="hero">
-    <h1 class="hero-title">Assistant For Detection Of Retinal Diseases <span>AI</span></h1>
-    <p class="hero-subtitle" style="text-align:center; margin-left:auto; margin-right:auto; display:block; width:100%;">
+    <h1 class="hero-title">Assistant For Detection Of Retinal Diseases</h1>
 </div>
 <div class="divider"></div>
 """, unsafe_allow_html=True)
@@ -553,86 +551,97 @@ st.markdown("""
 model = load_model_cached()
 
 # ==============================
-# Sidebar — Diseases ONLY (Fixed)
+# Sidebar — LLM Settings
 # ==============================
 with st.sidebar:
+    pass  # sidebar فارغ — القائمة انتقلت للداخل
+
+# Default LLM variables
+enable_llm = False
+ollama_model = "llama3"
+ollama_url = "http://localhost:11434"
+anthropic_api_key = ""
+backend_key = "ollama"
+
+# ==============================
+# Layout — 3 columns: diseases | upload | results
+# ==============================
+diseases_col, left_col, right_col = st.columns([1, 1.1, 1.8], gap="medium")
+
+# ── Diseases Panel ──
+with diseases_col:
     st.markdown("""
-    <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
-                color:#16a34a; margin-bottom:1rem; padding-bottom:0.5rem;
+    <div style="font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700;
+                color:#16a34a; margin-bottom:0.9rem; padding-bottom:0.5rem;
                 border-bottom:2px solid rgba(22,163,74,0.25);">
         🔬 الأمراض المكتشفة
     </div>
-    <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem;">
-        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+    <div style="display:flex; flex-direction:column; gap:0.45rem;">
+        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
                     border:1px solid #bbf7d0; border-left:4px solid #ef4444;
-                    border-radius:10px; padding:0.55rem 0.8rem;">
-            <span style="font-size:1.1rem;">🩺</span>
+                    border-radius:10px; padding:0.5rem 0.7rem;">
+            <span style="font-size:1rem;">🩺</span>
             <div>
-                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Diabetic Retinopathy</div>
-                <div style="font-size:0.7rem; color:#6aaa85;">اعتلال الشبكية السكري</div>
+                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Diabetic Retinopathy</div>
+                <div style="font-size:0.66rem; color:#6aaa85;">اعتلال الشبكية السكري</div>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
                     border:1px solid #bbf7d0; border-left:4px solid #ef4444;
-                    border-radius:10px; padding:0.55rem 0.8rem;">
-            <span style="font-size:1.1rem;">🧠</span>
+                    border-radius:10px; padding:0.5rem 0.7rem;">
+            <span style="font-size:1rem;">🧠</span>
             <div>
-                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Disc Edema</div>
-                <div style="font-size:0.7rem; color:#6aaa85;">وذمة القرص البصري</div>
+                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Disc Edema</div>
+                <div style="font-size:0.66rem; color:#6aaa85;">وذمة القرص البصري</div>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
                     border:1px solid #bbf7d0; border-left:4px solid #22c55e;
-                    border-radius:10px; padding:0.55rem 0.8rem;">
-            <span style="font-size:1.1rem;">✅</span>
+                    border-radius:10px; padding:0.5rem 0.7rem;">
+            <span style="font-size:1rem;">✅</span>
             <div>
-                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Healthy</div>
-                <div style="font-size:0.7rem; color:#6aaa85;">شبكية سليمة</div>
+                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Healthy</div>
+                <div style="font-size:0.66rem; color:#6aaa85;">شبكية سليمة</div>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
                     border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
-                    border-radius:10px; padding:0.55rem 0.8rem;">
-            <span style="font-size:1.1rem;">👓</span>
+                    border-radius:10px; padding:0.5rem 0.7rem;">
+            <span style="font-size:1rem;">👓</span>
             <div>
-                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Myopia</div>
-                <div style="font-size:0.7rem; color:#6aaa85;">قِصَر النظر</div>
+                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Myopia</div>
+                <div style="font-size:0.66rem; color:#6aaa85;">قِصَر النظر</div>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
                     border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
-                    border-radius:10px; padding:0.55rem 0.8rem;">
-            <span style="font-size:1.1rem;">🔬</span>
+                    border-radius:10px; padding:0.5rem 0.7rem;">
+            <span style="font-size:1rem;">🔬</span>
             <div>
-                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Pterygium</div>
-                <div style="font-size:0.7rem; color:#6aaa85;">الظفرة</div>
+                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Pterygium</div>
+                <div style="font-size:0.66rem; color:#6aaa85;">الظفرة</div>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
                     border:1px solid #bbf7d0; border-left:4px solid #dc2626;
-                    border-radius:10px; padding:0.55rem 0.8rem;">
-            <span style="font-size:1.1rem;">🚨</span>
+                    border-radius:10px; padding:0.5rem 0.7rem;">
+            <span style="font-size:1rem;">🚨</span>
             <div>
-                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Retinal Detachment</div>
-                <div style="font-size:0.7rem; color:#6aaa85;">انفصال الشبكية</div>
+                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Retinal Detachment</div>
+                <div style="font-size:0.66rem; color:#6aaa85;">انفصال الشبكية</div>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
                     border:1px solid #bbf7d0; border-left:4px solid #ef4444;
-                    border-radius:10px; padding:0.55rem 0.8rem;">
-            <span style="font-size:1.1rem;">🧬</span>
+                    border-radius:10px; padding:0.5rem 0.7rem;">
+            <span style="font-size:1rem;">🧬</span>
             <div>
-                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Retinitis Pigmentosa</div>
-                <div style="font-size:0.7rem; color:#6aaa85;">التهاب الشبكية الصباغي</div>
+                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Retinitis Pigmentosa</div>
+                <div style="font-size:0.66rem; color:#6aaa85;">التهاب الشبكية الصباغي</div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
-
-# ==============================
-# Layout
-# ==============================
-left_col, right_col = st.columns([1, 1.6], gap="large")
 
 with left_col:
     st.markdown('<div class="upload-label">رفع صورة العين</div>', unsafe_allow_html=True)
@@ -661,73 +670,6 @@ with left_col:
         """, unsafe_allow_html=True)
 
 with right_col:
-    # ==============================
-    # LLM Settings (moved from sidebar)
-    # ==============================
-    with st.expander("⚙️ إعدادات الشرح الذكي (LLM)", expanded=False):
-        enable_llm = st.toggle("تفعيل شرح LLM", value=True)
-
-        llm_backend = st.radio(
-            "مزوّد النموذج",
-            options=["Ollama (محلي)", "Claude API (سحابي)"],
-            index=0,
-            help="اختر Ollama لو النموذج عندك محلياً، أو Claude API لو عندك مفتاح Anthropic"
-        )
-        backend_key = "ollama" if llm_backend.startswith("Ollama") else "claude"
-
-        if backend_key == "ollama":
-            ollama_model = st.selectbox(
-                "نموذج Ollama",
-                options=["llama3", "mistral", "phi3", "gemma", "llama2", "neural-chat"],
-                index=0,
-                help="تأكد أن النموذج محمّل: ollama pull <model>"
-            )
-            ollama_url = st.text_input(
-                "Ollama URL",
-                value="http://localhost:11434",
-                help="الرابط الافتراضي لـ Ollama"
-            )
-            anthropic_api_key = ""
-
-            if st.button("🔌 اختبار الاتصال بـ Ollama", use_container_width=True):
-                ok, msg = _test_ollama_connection(ollama_url)
-                if ok:
-                    st.success(msg)
-                else:
-                    st.error(msg)
-
-            st.markdown("""
-            <div style="margin-top:1rem; font-size:0.75rem; color:#4b7a5e; line-height:2;">
-                <span style="color:#15803d; font-weight:500;">تشغيل Ollama:</span><br>
-                <code style="background:rgba(22,163,74,0.1); color:#15803d;
-                             padding:0.15rem 0.5rem; border-radius:4px;">ollama serve</code>
-                <br><br>
-                <span style="color:#15803d; font-weight:500;">تحميل نموذج:</span><br>
-                <code style="background:rgba(22,163,74,0.1); color:#15803d;
-                             padding:0.15rem 0.5rem; border-radius:4px;">ollama pull llama3</code>
-            </div>
-            """, unsafe_allow_html=True)
-
-        else:
-            ollama_model = "llama3"
-            ollama_url = "http://localhost:11434"
-            anthropic_api_key = st.text_input(
-                "Anthropic API Key",
-                type="password",
-                placeholder="sk-ant-...",
-                help="احصل على مفتاحك من: console.anthropic.com"
-            )
-            st.markdown("""
-            <div style="margin-top:1rem; font-size:0.75rem; color:#4b7a5e; line-height:1.8;">
-                النموذج المستخدم:
-                <code style="background:rgba(22,163,74,0.1); color:#16a34a;
-                             padding:0.1rem 0.4rem; border-radius:4px;">claude-haiku</code>
-                <br>
-                <a href="https://console.anthropic.com" target="_blank"
-                   style="color:#16a34a; text-decoration:none;">← احصل على API Key</a>
-            </div>
-            """, unsafe_allow_html=True)
-
     if uploaded_file:
         with st.spinner("🔍 جاري التحليل..."):
             pred, conf, all_preds = predict(image, model)
