@@ -27,7 +27,7 @@ st.markdown("""
 
     .stApp {
         background: linear-gradient(160deg, #0f1a2e 0%, #111827 50%, #0d1b2a 100%);
-        color: #dde8f5;
+        color: #172554;
     }
 
     #MainMenu, footer, header { visibility: hidden; }
