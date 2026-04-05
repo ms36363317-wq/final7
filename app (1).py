@@ -25,17 +25,7 @@ st.markdown("""
 
     html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 
-    /* ═══════════════════════════════════════════
-       MEDICAL GREEN — LIGHT MODE
-       Primary:   #16a34a  (green-600)
-       Accent:    #15803d  (green-700)
-       Light bg:  #f0fdf4  (green-50)
-       Surface:   #ffffff
-       Border:    #bbf7d0  (green-200)
-       Text:      #14532d  (green-900)
-       Muted:     #4ade80  (green-400)
-    ═══════════════════════════════════════════ */
-
+    /* MEDICAL GREEN — LIGHT MODE */
     html, body, [class*="css"], .stApp, .main {
         background-color: #f0fdf4 !important;
         color: #166534 !important;
@@ -49,7 +39,7 @@ st.markdown("""
     #MainMenu, footer, header { visibility: hidden; }
     .block-container { padding: 0 2rem 4rem; max-width: 1200px; }
 
-    /* ── Hero ── */
+    /* Hero */
     .hero {
         position: relative;
         text-align: center;
@@ -66,10 +56,6 @@ st.markdown("""
             radial-gradient(ellipse 40% 30% at 90% 70%, rgba(74,222,128,0.1) 0%, transparent 55%);
         pointer-events: none;
     }
-    .hero-eyebrow {
-        font-size: 0.75rem; font-weight: 600; letter-spacing: 0.28em;
-        text-transform: uppercase; color: #16a34a; margin-bottom: 0.75rem;
-    }
     .hero-title {
         font-family: 'Syne', sans-serif;
         font-size: clamp(2.4rem, 5vw, 4rem);
@@ -83,16 +69,15 @@ st.markdown("""
     .hero-subtitle {
         font-size: 1rem; font-weight: 300; color: #4b7a5e;
         max-width: 600px; margin: 0 auto; line-height: 1.75;
-        text-align: center; display: block; width: 100%;
+        text-align: center;
     }
-
     .divider {
         height: 1.5px;
         background: linear-gradient(90deg, transparent, rgba(22,163,74,0.4), transparent);
         margin: 0 0 2.5rem;
     }
 
-    /* ── Upload ── */
+    /* Upload */
     .upload-section {
         background: #ffffff;
         border: 2px dashed rgba(22,163,74,0.35);
@@ -116,7 +101,7 @@ st.markdown("""
     [data-testid="stFileUploader"] > div { border: none !important; background: transparent !important; padding: 0 !important; }
     [data-testid="stFileUploader"] label { color: #16a34a !important; font-size: 0.9rem; }
 
-    /* ── Image Cards ── */
+    /* Image Cards */
     .img-card {
         background: #ffffff;
         border: 1px solid #bbf7d0;
@@ -133,7 +118,6 @@ st.markdown("""
         color: #6aaa85; margin-top: 0.5rem;
     }
 
-    /* ── Streamlit image ── */
     [data-testid="stImage"] img {
         border-radius: 10px;
         width: 100%;
@@ -141,7 +125,7 @@ st.markdown("""
         object-fit: cover;
     }
 
-    /* ── All Streamlit widgets text fix ── */
+    /* Widgets */
     .stSelectbox label, .stTextInput label, .stToggle label,
     .stRadio label, .stExpander summary, p, span, div {
         color: #166534 !important;
@@ -152,7 +136,7 @@ st.markdown("""
         color: #14532d !important;
     }
 
-    /* ── Progress Bar ── */
+    /* Progress Bar */
     .stProgress > div > div > div > div {
         background: linear-gradient(90deg, #22c55e, #16a34a) !important;
         border-radius: 999px !important;
@@ -162,7 +146,7 @@ st.markdown("""
         border-radius: 999px !important; height: 8px !important;
     }
 
-    /* ── Confidence ── */
+    /* Confidence */
     .confidence-label {
         font-size: 0.78rem; letter-spacing: 0.15em;
         text-transform: uppercase; color: #6aaa85; margin-bottom: 0.5rem;
@@ -173,7 +157,7 @@ st.markdown("""
     }
     .confidence-value span { font-size: 1rem; font-weight: 400; color: #6aaa85; }
 
-    /* ── Disease Card ── */
+    /* Disease Card */
     .disease-card {
         background: #ffffff;
         border: 1px solid #bbf7d0;
@@ -187,7 +171,7 @@ st.markdown("""
     }
     .disease-card-text { font-size: 0.85rem; color: #4b7a5e; line-height: 1.7; }
 
-    /* ── LLM Explanation Card ── */
+    /* LLM Explanation Card */
     .llm-card {
         background: #f0fdf4;
         border: 1px solid #86efac;
@@ -216,35 +200,27 @@ st.markdown("""
         margin-top: 0.5rem;
     }
 
-    /* ── Ollama Model Selector ── */
-    .model-selector-label {
-        font-size: 0.72rem; letter-spacing: 0.18em;
-        text-transform: uppercase; color: #6aaa85;
-        margin-bottom: 0.4rem;
-    }
-
-    /* ── Disclaimer ── */
+    /* Disclaimer */
     .disclaimer {
         background: #fffbeb;
         border: 1px solid #fde68a;
         border-left: 4px solid #f59e0b;
         border-radius: 12px; padding: 0.9rem 1.2rem;
         font-size: 0.78rem; color: #92400e;
-        text-align: center; margin-top: 1rem; line-height: 1.65;
+        text-align: center; margin-top: 2rem; line-height: 1.65;
     }
 
-    [data-testid="stSidebar"] { display: none !important; }
-    [data-testid="collapsedControl"] { display: none !important; }
-    button[kind="header"] { display: none !important; }
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%) !important;
+        border-right: 2px solid #bbf7d0 !important;
+    }
 
-    /* ── Expander ── */
     .stExpander {
         background: #ffffff !important;
         border: 1px solid #bbf7d0 !important;
         border-radius: 12px !important;
     }
 
-    /* ── Buttons ── */
     .stButton > button {
         background: linear-gradient(135deg, #16a34a, #15803d) !important;
         color: #ffffff !important;
@@ -266,8 +242,7 @@ st.markdown("""
 # ==============================
 MODEL_PATH = "best_efficientnetb3.h5"
 FILE_ID = "1qnrKRAWa7UU5YbtT2UqGDbJij7uH6dIz"
-OLLAMA_URL = "http://localhost:11434/api/generate"
-ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"  # not used, kept for compatibility
 
 # ==============================
 # Disease Info
@@ -321,7 +296,7 @@ severity_color = {
 }
 
 # ==============================
-# LLM Explanation — Ollama أو Claude API
+# LLM Explanation — Ollama
 # ==============================
 PROMPT_TEMPLATE = """You are an ophthalmology AI assistant.
 
@@ -339,7 +314,7 @@ Structure (5 lines only, no headers, no repetition):
 
 
 def _clean_lines(text: str) -> str:
-    """خذ أول 5 أسطر غير فارغة."""
+    """Take first 5 non-empty lines."""
     lines = [l.strip() for l in text.split("\n") if l.strip()]
     return "\n".join(lines[:5])
 
@@ -365,7 +340,7 @@ def _explain_via_ollama(disease: str, confidence: float, ollama_model: str, olla
 
 
 def _test_ollama_connection(ollama_url: str) -> tuple:
-    """يختبر الاتصال بـ Ollama ويعيد (نجح، رسالة)."""
+    """Test connection to Ollama server."""
     try:
         r = requests.get(ollama_url.rstrip("/"), timeout=5)
         if r.status_code == 200:
@@ -379,54 +354,21 @@ def _test_ollama_connection(ollama_url: str) -> tuple:
         return False, f"❌ خطأ: {e}"
 
 
-def _explain_via_claude(disease: str, confidence: float, api_key: str) -> str:
-    prompt = PROMPT_TEMPLATE.format(disease=disease, confidence=confidence * 100)
-    response = requests.post(
-        ANTHROPIC_API_URL,
-        headers={
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
-        json={
-            "model": "claude-haiku-4-5-20251001",
-            "max_tokens": 300,
-            "messages": [{"role": "user", "content": prompt}],
-        },
-        timeout=30,
-    )
-    response.raise_for_status()
-    raw = response.json()["content"][0]["text"].strip()
-    return _clean_lines(raw)
-
-
 def local_llm_explain(
     disease: str,
     confidence: float,
     ollama_model: str = "llama3",
     ollama_url: str = "http://localhost:11434",
-    backend: str = "ollama",
-    anthropic_api_key: str = "",
 ) -> str:
     try:
-        if backend == "claude":
-            if not anthropic_api_key.strip():
-                return "ERROR: أدخل Anthropic API Key في إعدادات الشريط الجانبي."
-            return _explain_via_claude(disease, confidence, anthropic_api_key.strip())
-        else:
-            return _explain_via_ollama(disease, confidence, ollama_model, ollama_url)
-
+        return _explain_via_ollama(disease, confidence, ollama_model, ollama_url)
     except requests.exceptions.ConnectionError:
-        if backend == "ollama":
-            return f"ERROR: تعذّر الاتصال بـ Ollama على {ollama_url} — تأكد أن: ollama serve يعمل"
-        return "ERROR: تعذّر الاتصال بـ Anthropic API — تحقق من اتصالك بالإنترنت."
+        return f"ERROR: تعذّر الاتصال بـ Ollama على {ollama_url} — تأكد أن: ollama serve يعمل"
     except requests.exceptions.Timeout:
         return "ERROR: انتهت مهلة الاستجابة — النموذج بطيء أو غير محمّل."
     except requests.exceptions.HTTPError as e:
         status = e.response.status_code if e.response is not None else "?"
-        if status == 401:
-            return "ERROR: API Key غير صالح — تحقق من المفتاح."
-        if status == 404 and backend == "ollama":
+        if status == 404:
             return f"ERROR: النموذج «{ollama_model}» غير محمّل — نفّذ: ollama pull {ollama_model}"
         return f"ERROR: HTTP {status} — {e}"
     except Exception as e:
@@ -551,24 +493,57 @@ st.markdown("""
 model = load_model_cached()
 
 # ==============================
-# Sidebar — LLM Settings
+# Sidebar — LLM Settings (Ollama)
 # ==============================
 with st.sidebar:
-    pass  # sidebar فارغ — القائمة انتقلت للداخل
+    st.markdown("""
+    <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
+                color:#16a34a; margin-bottom:1rem; padding-bottom:0.5rem;
+                border-bottom:2px solid rgba(22,163,74,0.25);">
+        🤖 إعدادات الشرح الذكي (Ollama)
+    </div>
+    """, unsafe_allow_html=True)
 
-# Default LLM variables
-enable_llm = False
-ollama_model = "llama3"
-ollama_url = "http://localhost:11434"
-anthropic_api_key = ""
-backend_key = "ollama"
+    enable_llm = st.toggle("🔘 تفعيل شرح LLM", value=True)
+
+    ollama_model = st.selectbox(
+        "نموذج Ollama",
+        options=["llama3", "mistral", "phi3", "gemma", "llama2", "neural-chat"],
+        index=0,
+        help="تأكد أن النموذج محمّل: ollama pull <model>"
+    )
+
+    ollama_url = st.text_input(
+        "Ollama URL",
+        value="http://localhost:11434",
+        help="الرابط الافتراضي لـ Ollama"
+    )
+
+    if st.button("🔌 اختبار الاتصال بـ Ollama", use_container_width=True):
+        ok, msg = _test_ollama_connection(ollama_url)
+        if ok:
+            st.success(msg)
+        else:
+            st.error(msg)
+
+    st.markdown("""
+    <div style="margin-top:1rem; font-size:0.75rem; color:#4b7a5e; line-height:2;">
+        <span style="color:#15803d; font-weight:500;">تشغيل Ollama:</span><br>
+        <code style="background:rgba(22,163,74,0.1); color:#15803d;
+                     padding:0.15rem 0.5rem; border-radius:4px;">ollama serve</code>
+        <br><br>
+        <span style="color:#15803d; font-weight:500;">تحميل نموذج:</span><br>
+        <code style="background:rgba(22,163,74,0.1); color:#15803d;
+                     padding:0.15rem 0.5rem; border-radius:4px;">ollama pull llama3</code>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ==============================
 # Layout — 3 columns: diseases | upload | results
 # ==============================
 diseases_col, left_col, right_col = st.columns([1, 1.1, 1.8], gap="medium")
 
-# ── Diseases Panel ──
+# ── Diseases Panel (leftmost) ──
 with diseases_col:
     st.markdown("""
     <div style="font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700;
@@ -643,6 +618,7 @@ with diseases_col:
     </div>
     """, unsafe_allow_html=True)
 
+# ── Upload Column ──
 with left_col:
     st.markdown('<div class="upload-label">رفع صورة العين</div>', unsafe_allow_html=True)
     st.markdown('<div class="upload-hint">الصيغ المدعومة: JPG · PNG</div>', unsafe_allow_html=True)
@@ -669,6 +645,7 @@ with left_col:
         </div>
         """, unsafe_allow_html=True)
 
+# ── Results Column ──
 with right_col:
     if uploaded_file:
         with st.spinner("🔍 جاري التحليل..."):
@@ -679,7 +656,7 @@ with right_col:
         color = severity_color.get(pred, "#38bdf8")
         info = disease_info.get(pred, {})
 
-        # ── Diagnosis ──
+        # Diagnosis
         st.markdown(f"""
         <div style="margin-bottom:1.5rem;">
             <div style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase;
@@ -696,7 +673,7 @@ with right_col:
 
         st.progress(int(conf * 100))
 
-        # ── Disease Card ──
+        # Disease Card
         if info:
             st.markdown(f"""
             <div class="disease-card">
@@ -710,40 +687,34 @@ with right_col:
             </div>
             """, unsafe_allow_html=True)
 
-        # ── LLM Explanation ──
+        # LLM Explanation (Ollama)
         if enable_llm:
-            backend_label = "Claude API (Haiku)" if backend_key == "claude" else f"Ollama — {ollama_model}"
-            with st.spinner(f"🤖 جاري توليد الشرح الطبي عبر {backend_label}..."):
+            with st.spinner(f"🤖 جاري توليد الشرح الطبي عبر Ollama ({ollama_model})..."):
                 llm_result = local_llm_explain(
                     pred, conf,
                     ollama_model=ollama_model,
                     ollama_url=ollama_url,
-                    backend=backend_key,
-                    anthropic_api_key=anthropic_api_key,
                 )
 
             if llm_result.startswith("ERROR:"):
                 error_msg = llm_result.replace("ERROR:", "").strip()
                 st.markdown(f"""
                 <div class="llm-card">
-                    <div class="llm-card-title">🤖 شرح النموذج اللغوي — {backend_label}</div>
+                    <div class="llm-card-title">🤖 شرح النموذج اللغوي — Ollama ({ollama_model})</div>
                     <div class="llm-error">⚠️ {error_msg}</div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 lines = [l.strip() for l in llm_result.split("\n") if l.strip()]
-                lines_html = "".join(
-                    f'<div class="llm-line">{line}</div>'
-                    for line in lines
-                )
+                lines_html = "".join(f'<div class="llm-line">{line}</div>' for line in lines)
                 st.markdown(f"""
                 <div class="llm-card">
-                    <div class="llm-card-title">🤖 شرح النموذج اللغوي — {backend_label}</div>
+                    <div class="llm-card-title">🤖 شرح النموذج اللغوي — Ollama ({ollama_model})</div>
                     {lines_html}
                 </div>
                 """, unsafe_allow_html=True)
 
-        # ── Grad-CAM ──
+        # Grad-CAM
         st.markdown('<br>', unsafe_allow_html=True)
         st.markdown("""
         <div style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase;
@@ -760,7 +731,7 @@ with right_col:
             st.image(overlay, width=200, channels="BGR")
             st.markdown('<div class="img-card-label">الصورة المدمجة</div></div>', unsafe_allow_html=True)
 
-        # ── All Probabilities ──
+        # All Probabilities
         with st.expander("📊 جميع الاحتمالات"):
             for i in np.argsort(all_preds)[::-1]:
                 pct = float(all_preds[i]) * 100
