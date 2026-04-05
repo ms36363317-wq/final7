@@ -340,7 +340,7 @@ st.markdown("""
     <div class="hero-eyebrow">AI-Powered Ophthalmology</div>
     <h1 class="hero-title">Assistant For Detection Of <span>Retinal Diseases</span></h1>
     <p class="hero-subtitle">
-        نظام ذكاء اصطناعي لتحليل صور قاع العين وكشف الأمراض باستخدام EfficientNet و Grad-CAM
+        نظام ذكاء اصطناعي لتحليل صور قاع العين وكشف الأمراض 
     </p>
 </div>
 """, unsafe_allow_html=True)
