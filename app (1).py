@@ -539,119 +539,99 @@ def gradcam(img, model):
 # ==============================
 # Hero
 # ==============================
+st.markdown("""
+<div class="hero">
+    <h1 class="hero-title">Assistant For Detection Of Retinal Diseases <span>AI</span></h1>
+    <p class="hero-subtitle" style="text-align:center; margin-left:auto; margin-right:auto; display:block; width:100%;">
+</div>
+<div class="divider"></div>
+""", unsafe_allow_html=True)
+
+# ==============================
+# Load Vision Model
+# ==============================
+model = load_model_cached()
+
 # ==============================
 # Sidebar — LLM Settings
 # ==============================
 with st.sidebar:
-
     # ── Diseases Panel ──
     st.markdown("""
-    <div style="display:flex; gap:0.8rem;">
-
-        <!-- العمود الشمال -->
-        <div style="flex:1;">
-            <div style="font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700;
-                        color:#16a34a; margin-bottom:0.9rem; padding-bottom:0.5rem;
-                        border-bottom:2px solid rgba(22,163,74,0.25);">
-                📋 Diseases
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:0.45rem;">
-                <div style="background:#ecfdf5; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.72rem;">Diabetic Retinopathy</div>
-                <div style="background:#ecfdf5; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.72rem;">Disc Edema</div>
-                <div style="background:#ecfdf5; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.72rem;">Healthy</div>
-                <div style="background:#ecfdf5; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.72rem;">Myopia</div>
-                <div style="background:#ecfdf5; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.72rem;">Pterygium</div>
-                <div style="background:#ecfdf5; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.72rem;">Retinal Detachment</div>
-                <div style="background:#ecfdf5; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.72rem;">Retinitis Pigmentosa</div>
-            </div>
-        </div>
-
-        <!-- العمود اليمين -->
-        <div style="flex:2;">
-            <div style="font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700;
-                        color:#16a34a; margin-bottom:0.9rem; padding-bottom:0.5rem;
-                        border-bottom:2px solid rgba(22,163,74,0.25);">
-                🔬 الأمراض المكتشفة
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:0.45rem;">
-
-                <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                            border:1px solid #bbf7d0; border-left:4px solid #ef4444;
-                            border-radius:10px; padding:0.5rem 0.7rem;">
-                    <span>🩺</span>
-                    <div>
-                        <div style="font-size:0.78rem; font-weight:600;">Diabetic Retinopathy</div>
-                        <div style="font-size:0.66rem; color:#6aaa85;">اعتلال الشبكية السكري</div>
-                    </div>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                            border:1px solid #bbf7d0; border-left:4px solid #ef4444;
-                            border-radius:10px; padding:0.5rem 0.7rem;">
-                    <span>🧠</span>
-                    <div>
-                        <div style="font-size:0.78rem; font-weight:600;">Disc Edema</div>
-                        <div style="font-size:0.66rem; color:#6aaa85;">وذمة القرص البصري</div>
-                    </div>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                            border:1px solid #bbf7d0; border-left:4px solid #22c55e;
-                            border-radius:10px; padding:0.5rem 0.7rem;">
-                    <span>✅</span>
-                    <div>
-                        <div style="font-size:0.78rem; font-weight:600;">Healthy</div>
-                        <div style="font-size:0.66rem; color:#6aaa85;">شبكية سليمة</div>
-                    </div>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                            border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
-                            border-radius:10px; padding:0.5rem 0.7rem;">
-                    <span>👓</span>
-                    <div>
-                        <div style="font-size:0.78rem; font-weight:600;">Myopia</div>
-                        <div style="font-size:0.66rem; color:#6aaa85;">قِصَر النظر</div>
-                    </div>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                            border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
-                            border-radius:10px; padding:0.5rem 0.7rem;">
-                    <span>🔬</span>
-                    <div>
-                        <div style="font-size:0.78rem; font-weight:600;">Pterygium</div>
-                        <div style="font-size:0.66rem; color:#6aaa85;">الظفرة</div>
-                    </div>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                            border:1px solid #bbf7d0; border-left:4px solid #dc2626;
-                            border-radius:10px; padding:0.5rem 0.7rem;">
-                    <span>🚨</span>
-                    <div>
-                        <div style="font-size:0.78rem; font-weight:600;">Retinal Detachment</div>
-                        <div style="font-size:0.66rem; color:#6aaa85;">انفصال الشبكية</div>
-                    </div>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                            border:1px solid #bbf7d0; border-left:4px solid #ef4444;
-                            border-radius:10px; padding:0.5rem 0.7rem;">
-                    <span>🧬</span>
-                    <div>
-                        <div style="font-size:0.78rem; font-weight:600;">Retinitis Pigmentosa</div>
-                        <div style="font-size:0.66rem; color:#6aaa85;">التهاب الشبكية الصباغي</div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
+    <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
+                color:#16a34a; margin-bottom:1rem; padding-bottom:0.5rem;
+                border-bottom:2px solid rgba(22,163,74,0.25);">
+        🔬 الأمراض المكتشفة
     </div>
+    <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem;">
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #ef4444;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🩺</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Diabetic Retinopathy</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">اعتلال الشبكية السكري</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #ef4444;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🧠</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Disc Edema</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">وذمة القرص البصري</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #22c55e;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">✅</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Healthy</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">شبكية سليمة</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">👓</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Myopia</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">قِصَر النظر</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🔬</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Pterygium</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">الظفرة</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #dc2626;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🚨</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Retinal Detachment</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">انفصال الشبكية</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:#fff;
+                    border:1px solid #bbf7d0; border-left:4px solid #ef4444;
+                    border-radius:10px; padding:0.55rem 0.8rem;">
+            <span style="font-size:1.1rem;">🧬</span>
+            <div>
+                <div style="font-size:0.82rem; font-weight:600; color:#14532d;">Retinitis Pigmentosa</div>
+                <div style="font-size:0.7rem; color:#6aaa85;">التهاب الشبكية الصباغي</div>
+            </div>
+        </div>
+    </div>
+    <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(22,163,74,0.3),transparent);
+                margin-bottom:1.2rem;"></div>
     """, unsafe_allow_html=True)
+
     # ── LLM Settings ──
     st.markdown("""
     <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
