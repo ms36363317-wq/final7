@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==============================
-# Custom CSS
+# Custom CSS (نفس الكود الأصلي، لم يتغير)
 # ==============================
 st.markdown("""
 <style>
@@ -412,7 +412,7 @@ def local_llm_explain(
     try:
         if backend == "claude":
             if not anthropic_api_key.strip():
-                return "ERROR: أدخل Anthropic API Key في إعدادات الشريط الجانبي."
+                return "ERROR: أدخل Anthropic API Key في إعدادات LLM."
             return _explain_via_claude(disease, confidence, anthropic_api_key.strip())
         else:
             return _explain_via_ollama(disease, confidence, ollama_model, ollama_url)
@@ -553,10 +553,9 @@ st.markdown("""
 model = load_model_cached()
 
 # ==============================
-# Sidebar — LLM Settings
+# SIDEBAR: الأمراض فقط
 # ==============================
 with st.sidebar:
-    # ── Diseases Panel ──
     st.markdown("""
     <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
                 color:#16a34a; margin-bottom:1rem; padding-bottom:0.5rem;
@@ -632,81 +631,6 @@ with st.sidebar:
                 margin-bottom:1.2rem;"></div>
     """, unsafe_allow_html=True)
 
-    # ── LLM Settings ──
-    st.markdown("""
-    <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
-                color:#16a34a; margin-bottom:1rem; padding-bottom:0.5rem;
-                border-bottom:2px solid rgba(22,163,74,0.25);">
-        ⚙️ إعدادات النموذج اللغوي
-    </div>
-    """, unsafe_allow_html=True)
-
-    enable_llm = st.toggle("تفعيل شرح LLM", value=True)
-
-    llm_backend = st.radio(
-        "مزوّد النموذج",
-        options=["Ollama (محلي)", "Claude API (سحابي)"],
-        index=0,
-        help="اختر Ollama لو النموذج عندك محلياً، أو Claude API لو عندك مفتاح Anthropic"
-    )
-    backend_key = "ollama" if llm_backend.startswith("Ollama") else "claude"
-
-    # ── Ollama settings ──
-    if backend_key == "ollama":
-        ollama_model = st.selectbox(
-            "نموذج Ollama",
-            options=["llama3", "mistral", "phi3", "gemma", "llama2", "neural-chat"],
-            index=0,
-            help="تأكد أن النموذج محمّل: ollama pull <model>"
-        )
-        ollama_url = st.text_input(
-            "Ollama URL",
-            value="http://localhost:11434",
-            help="الرابط الافتراضي لـ Ollama"
-        )
-        anthropic_api_key = ""
-
-        # زر اختبار الاتصال
-        if st.button("🔌 اختبار الاتصال بـ Ollama", use_container_width=True):
-            ok, msg = _test_ollama_connection(ollama_url)
-            if ok:
-                st.success(msg)
-            else:
-                st.error(msg)
-
-        st.markdown("""
-        <div style="margin-top:1.2rem; font-size:0.75rem; color:#4b7a5e; line-height:2;">
-            <span style="color:#15803d; font-weight:500;">تشغيل Ollama:</span><br>
-            <code style="background:rgba(22,163,74,0.1); color:#15803d;
-                         padding:0.15rem 0.5rem; border-radius:4px;">ollama serve</code>
-            <br><br>
-            <span style="color:#15803d; font-weight:500;">تحميل نموذج:</span><br>
-            <code style="background:rgba(22,163,74,0.1); color:#15803d;
-                         padding:0.15rem 0.5rem; border-radius:4px;">ollama pull llama3</code>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ── Claude API settings ──
-    else:
-        ollama_model = "llama3"
-        ollama_url = "http://localhost:11434"
-        anthropic_api_key = st.text_input(
-            "Anthropic API Key",
-            type="password",
-            placeholder="sk-ant-...",
-            help="احصل على مفتاحك من: console.anthropic.com"
-        )
-        st.markdown("""
-        <div style="margin-top:1rem; font-size:0.75rem; color:#4b7a5e; line-height:1.8;">
-            النموذج المستخدم:
-            <code style="background:rgba(22,163,74,0.1); color:#16a34a;
-                         padding:0.1rem 0.4rem; border-radius:4px;">claude-haiku</code>
-            <br>
-            <a href="https://console.anthropic.com" target="_blank"
-               style="color:#16a34a; text-decoration:none;">← احصل على API Key</a>
-        </div>
-        """, unsafe_allow_html=True)
-
 # ==============================
 # Layout
 # ==============================
@@ -778,6 +702,72 @@ with right_col:
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+        # ==============================
+        # LLM SETTINGS (تم نقلها إلى الواجهة الرئيسية)
+        # ==============================
+        with st.expander("⚙️ إعدادات شرح النموذج اللغوي (LLM)"):
+            enable_llm = st.toggle("تفعيل شرح LLM", value=True)
+
+            llm_backend = st.radio(
+                "مزوّد النموذج",
+                options=["Ollama (محلي)", "Claude API (سحابي)"],
+                index=0,
+                help="اختر Ollama لو النموذج عندك محلياً، أو Claude API لو عندك مفتاح Anthropic"
+            )
+            backend_key = "ollama" if llm_backend.startswith("Ollama") else "claude"
+
+            # Ollama settings
+            if backend_key == "ollama":
+                ollama_model = st.selectbox(
+                    "نموذج Ollama",
+                    options=["llama3", "mistral", "phi3", "gemma", "llama2", "neural-chat"],
+                    index=0,
+                    help="تأكد أن النموذج محمّل: ollama pull <model>"
+                )
+                ollama_url = st.text_input(
+                    "Ollama URL",
+                    value="http://localhost:11434",
+                    help="الرابط الافتراضي لـ Ollama"
+                )
+                anthropic_api_key = ""
+                if st.button("🔌 اختبار الاتصال بـ Ollama", use_container_width=True):
+                    ok, msg = _test_ollama_connection(ollama_url)
+                    if ok:
+                        st.success(msg)
+                    else:
+                        st.error(msg)
+                st.markdown("""
+                <div style="margin-top:1rem; font-size:0.75rem; color:#4b7a5e; line-height:2;">
+                    <span style="color:#15803d; font-weight:500;">تشغيل Ollama:</span><br>
+                    <code style="background:rgba(22,163,74,0.1); color:#15803d;
+                                 padding:0.15rem 0.5rem; border-radius:4px;">ollama serve</code>
+                    <br><br>
+                    <span style="color:#15803d; font-weight:500;">تحميل نموذج:</span><br>
+                    <code style="background:rgba(22,163,74,0.1); color:#15803d;
+                                 padding:0.15rem 0.5rem; border-radius:4px;">ollama pull llama3</code>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                # Claude settings
+                ollama_model = "llama3"   # placeholder
+                ollama_url = "http://localhost:11434"
+                anthropic_api_key = st.text_input(
+                    "Anthropic API Key",
+                    type="password",
+                    placeholder="sk-ant-...",
+                    help="احصل على مفتاحك من: console.anthropic.com"
+                )
+                st.markdown("""
+                <div style="margin-top:1rem; font-size:0.75rem; color:#4b7a5e; line-height:1.8;">
+                    النموذج المستخدم:
+                    <code style="background:rgba(22,163,74,0.1); color:#16a34a;
+                                 padding:0.1rem 0.4rem; border-radius:4px;">claude-haiku</code>
+                    <br>
+                    <a href="https://console.anthropic.com" target="_blank"
+                       style="color:#16a34a; text-decoration:none;">← احصل على API Key</a>
+                </div>
+                """, unsafe_allow_html=True)
 
         # ── LLM Explanation ──
         if enable_llm:
