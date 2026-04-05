@@ -25,9 +25,25 @@ st.markdown("""
 
     html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 
+    /* ═══════════════════════════════════════════
+       MEDICAL GREEN — LIGHT MODE
+       Primary:   #16a34a  (green-600)
+       Accent:    #15803d  (green-700)
+       Light bg:  #f0fdf4  (green-50)
+       Surface:   #ffffff
+       Border:    #bbf7d0  (green-200)
+       Text:      #14532d  (green-900)
+       Muted:     #4ade80  (green-400)
+    ═══════════════════════════════════════════ */
+
+    html, body, [class*="css"], .stApp, .main {
+        background-color: #f0fdf4 !important;
+        color: #166534 !important;
+    }
+
     .stApp {
-        background: linear-gradient(160deg, #0f1a2e 0%, #111827 50%, #0d1b2a 100%);
-        color: #172554;
+        background: linear-gradient(150deg, #f0fdf4 0%, #dcfce7 40%, #f0fdf4 100%) !important;
+        color: #166534;
     }
 
     #MainMenu, footer, header { visibility: hidden; }
@@ -45,72 +61,75 @@ st.markdown("""
         position: absolute;
         inset: 0;
         background:
-            radial-gradient(ellipse 70% 50% at 50% 0%, rgba(56,189,248,0.09) 0%, transparent 65%),
-            radial-gradient(ellipse 35% 25% at 15% 85%, rgba(99,102,241,0.07) 0%, transparent 60%),
-            radial-gradient(ellipse 40% 30% at 85% 75%, rgba(14,165,233,0.05) 0%, transparent 55%);
+            radial-gradient(ellipse 70% 50% at 50% 0%, rgba(22,163,74,0.12) 0%, transparent 65%),
+            radial-gradient(ellipse 35% 25% at 10% 85%, rgba(21,128,61,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 30% at 90% 70%, rgba(74,222,128,0.1) 0%, transparent 55%);
         pointer-events: none;
     }
     .hero-eyebrow {
-        font-size: 0.75rem; font-weight: 500; letter-spacing: 0.25em;
-        text-transform: uppercase; color: #38bdf8; margin-bottom: 0.75rem;
+        font-size: 0.75rem; font-weight: 600; letter-spacing: 0.28em;
+        text-transform: uppercase; color: #16a34a; margin-bottom: 0.75rem;
     }
     .hero-title {
         font-family: 'Syne', sans-serif;
         font-size: clamp(2.4rem, 5vw, 4rem);
         font-weight: 800; line-height: 1.05;
-        letter-spacing: -0.02em; color: #eaf2ff; margin: 0 0 1rem;
+        letter-spacing: -0.02em; color: #14532d; margin: 0 0 1rem;
     }
     .hero-title span {
-        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #4ade80 100%);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .hero-subtitle {
-        font-size: 1rem; font-weight: 300; color: #7a9ab8;
+        font-size: 1rem; font-weight: 300; color: #4b7a5e;
         max-width: 520px; margin: 0 auto; line-height: 1.75;
     }
 
     .divider {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(56,189,248,0.25), transparent);
+        height: 1.5px;
+        background: linear-gradient(90deg, transparent, rgba(22,163,74,0.4), transparent);
         margin: 0 0 2.5rem;
     }
 
     /* ── Upload ── */
     .upload-section {
-        background: rgba(255,255,255,0.04);
-        border: 1.5px dashed rgba(56,189,248,0.22);
+        background: #ffffff;
+        border: 2px dashed rgba(22,163,74,0.35);
         border-radius: 20px; padding: 2.5rem 2rem;
         text-align: center; margin-bottom: 2rem;
-        transition: border-color 0.2s ease;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 12px rgba(22,163,74,0.07);
     }
     .upload-section:hover {
-        border-color: rgba(56,189,248,0.4);
+        border-color: #16a34a;
+        background: #f0fdf4;
+        box-shadow: 0 4px 20px rgba(22,163,74,0.12);
     }
     .upload-label {
         font-family: 'Syne', sans-serif; font-size: 1.1rem;
-        font-weight: 600; color: #c0d4ea; margin-bottom: 0.4rem;
+        font-weight: 600; color: #15803d; margin-bottom: 0.4rem;
     }
-    .upload-hint { font-size: 0.82rem; color: #4e6e8a; }
+    .upload-hint { font-size: 0.82rem; color: #6aaa85; }
 
     [data-testid="stFileUploader"] { background: transparent !important; }
     [data-testid="stFileUploader"] > div { border: none !important; background: transparent !important; padding: 0 !important; }
-    [data-testid="stFileUploader"] label { color: #38bdf8 !important; font-size: 0.9rem; }
+    [data-testid="stFileUploader"] label { color: #16a34a !important; font-size: 0.9rem; }
 
     /* ── Image Cards ── */
     .img-card {
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.09);
+        background: #ffffff;
+        border: 1px solid #bbf7d0;
         border-radius: 14px;
         padding: 0.6rem 0.6rem 0.5rem;
         text-align: center;
         max-width: 220px;
         margin: 0 auto;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        box-shadow: 0 4px 16px rgba(22,163,74,0.1);
     }
     .img-card-label {
-        font-size: 0.68rem; font-weight: 500;
+        font-size: 0.68rem; font-weight: 600;
         letter-spacing: 0.18em; text-transform: uppercase;
-        color: #4e6e8a; margin-top: 0.5rem;
+        color: #6aaa85; margin-top: 0.5rem;
     }
 
     /* ── Streamlit image ── */
@@ -121,64 +140,77 @@ st.markdown("""
         object-fit: cover;
     }
 
+    /* ── All Streamlit widgets text fix ── */
+    .stSelectbox label, .stTextInput label, .stToggle label,
+    .stRadio label, .stExpander summary, p, span, div {
+        color: #166534 !important;
+    }
+    .stSelectbox > div > div, .stTextInput > div > div > input {
+        background: #ffffff !important;
+        border-color: #bbf7d0 !important;
+        color: #14532d !important;
+    }
+
     /* ── Progress Bar ── */
     .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #0ea5e9, #6366f1) !important;
+        background: linear-gradient(90deg, #22c55e, #16a34a) !important;
         border-radius: 999px !important;
     }
     .stProgress > div > div {
-        background: rgba(255,255,255,0.08) !important;
+        background: #dcfce7 !important;
         border-radius: 999px !important; height: 8px !important;
     }
 
     /* ── Confidence ── */
     .confidence-label {
         font-size: 0.78rem; letter-spacing: 0.15em;
-        text-transform: uppercase; color: #4e6e8a; margin-bottom: 0.5rem;
+        text-transform: uppercase; color: #6aaa85; margin-bottom: 0.5rem;
     }
     .confidence-value {
         font-family: 'Syne', sans-serif; font-size: 2.4rem;
-        font-weight: 800; color: #eaf2ff; line-height: 1;
+        font-weight: 800; color: #14532d; line-height: 1;
     }
-    .confidence-value span { font-size: 1rem; font-weight: 400; color: #4e6e8a; }
+    .confidence-value span { font-size: 1rem; font-weight: 400; color: #6aaa85; }
 
     /* ── Disease Card ── */
     .disease-card {
-        background: rgba(14,165,233,0.06);
-        border: 1px solid rgba(56,189,248,0.18);
+        background: #ffffff;
+        border: 1px solid #bbf7d0;
+        border-left: 4px solid #16a34a;
         border-radius: 16px; padding: 1.2rem 1.4rem; margin-top: 1rem;
-        box-shadow: 0 2px 16px rgba(14,165,233,0.06);
+        box-shadow: 0 2px 16px rgba(22,163,74,0.08);
     }
     .disease-card-title {
         font-family: 'Syne', sans-serif; font-size: 0.95rem;
-        font-weight: 700; color: #38bdf8; margin-bottom: 0.4rem;
+        font-weight: 700; color: #15803d; margin-bottom: 0.4rem;
     }
-    .disease-card-text { font-size: 0.85rem; color: #7a9ab8; line-height: 1.7; }
+    .disease-card-text { font-size: 0.85rem; color: #4b7a5e; line-height: 1.7; }
 
     /* ── LLM Explanation Card ── */
     .llm-card {
-        background: rgba(99,102,241,0.07);
-        border: 1px solid rgba(129,140,248,0.2);
+        background: #f0fdf4;
+        border: 1px solid #86efac;
+        border-left: 4px solid #4ade80;
         border-radius: 16px;
         padding: 1.2rem 1.4rem;
         margin-top: 1rem;
-        box-shadow: 0 2px 16px rgba(99,102,241,0.06);
+        box-shadow: 0 2px 16px rgba(74,222,128,0.1);
     }
     .llm-card-title {
         font-family: 'Syne', sans-serif; font-size: 0.95rem;
-        font-weight: 700; color: #818cf8; margin-bottom: 0.75rem;
+        font-weight: 700; color: #16a34a; margin-bottom: 0.75rem;
         display: flex; align-items: center; gap: 0.4rem;
     }
     .llm-line {
-        font-size: 0.86rem; color: #b8cfe8;
+        font-size: 0.86rem; color: #2d6a44;
         line-height: 1.75; margin-bottom: 0.45rem;
         padding-left: 0.6rem;
-        border-left: 2px solid rgba(129,140,248,0.28);
+        border-left: 2px solid rgba(22,163,74,0.35);
     }
     .llm-error {
-        font-size: 0.82rem; color: #f59e0b;
+        font-size: 0.82rem; color: #b45309;
         background: rgba(245,158,11,0.08);
-        border: 1px solid rgba(245,158,11,0.2);
+        border: 1px solid rgba(245,158,11,0.3);
         border-radius: 8px; padding: 0.7rem 1rem;
         margin-top: 0.5rem;
     }
@@ -186,22 +218,45 @@ st.markdown("""
     /* ── Ollama Model Selector ── */
     .model-selector-label {
         font-size: 0.72rem; letter-spacing: 0.18em;
-        text-transform: uppercase; color: #4e6e8a;
+        text-transform: uppercase; color: #6aaa85;
         margin-bottom: 0.4rem;
     }
 
     /* ── Disclaimer ── */
     .disclaimer {
-        background: rgba(245,158,11,0.07);
-        border: 1px solid rgba(245,158,11,0.18);
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-left: 4px solid #f59e0b;
         border-radius: 12px; padding: 0.9rem 1.2rem;
-        font-size: 0.78rem; color: #8a6e2e;
+        font-size: 0.78rem; color: #92400e;
         text-align: center; margin-top: 2.5rem; line-height: 1.65;
     }
 
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0e1624 0%, #111827 100%) !important;
-        border-right: 1px solid rgba(255,255,255,0.07);
+        background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%) !important;
+        border-right: 2px solid #bbf7d0 !important;
+    }
+
+    /* ── Expander ── */
+    .stExpander {
+        background: #ffffff !important;
+        border: 1px solid #bbf7d0 !important;
+        border-radius: 12px !important;
+    }
+
+    /* ── Buttons ── */
+    .stButton > button {
+        background: linear-gradient(135deg, #16a34a, #15803d) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 8px rgba(22,163,74,0.3) !important;
+    }
+    .stButton > button:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 16px rgba(22,163,74,0.4) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -505,8 +560,8 @@ model = load_model_cached()
 with st.sidebar:
     st.markdown("""
     <div style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
-                color:#818cf8; margin-bottom:1rem; padding-bottom:0.5rem;
-                border-bottom:1px solid rgba(129,140,248,0.2);">
+                color:#16a34a; margin-bottom:1rem; padding-bottom:0.5rem;
+                border-bottom:2px solid rgba(22,163,74,0.25);">
         ⚙️ إعدادات النموذج اللغوي
     </div>
     """, unsafe_allow_html=True)
@@ -545,13 +600,13 @@ with st.sidebar:
                 st.error(msg)
 
         st.markdown("""
-        <div style="margin-top:1.2rem; font-size:0.75rem; color:#3a5a76; line-height:2;">
-            <span style="color:#5a7a96; font-weight:500;">تشغيل Ollama:</span><br>
-            <code style="background:rgba(56,189,248,0.08); color:#38bdf8;
+        <div style="margin-top:1.2rem; font-size:0.75rem; color:#4b7a5e; line-height:2;">
+            <span style="color:#15803d; font-weight:500;">تشغيل Ollama:</span><br>
+            <code style="background:rgba(22,163,74,0.1); color:#15803d;
                          padding:0.15rem 0.5rem; border-radius:4px;">ollama serve</code>
             <br><br>
-            <span style="color:#5a7a96; font-weight:500;">تحميل نموذج:</span><br>
-            <code style="background:rgba(56,189,248,0.08); color:#38bdf8;
+            <span style="color:#15803d; font-weight:500;">تحميل نموذج:</span><br>
+            <code style="background:rgba(22,163,74,0.1); color:#15803d;
                          padding:0.15rem 0.5rem; border-radius:4px;">ollama pull llama3</code>
         </div>
         """, unsafe_allow_html=True)
@@ -567,13 +622,13 @@ with st.sidebar:
             help="احصل على مفتاحك من: console.anthropic.com"
         )
         st.markdown("""
-        <div style="margin-top:1rem; font-size:0.75rem; color:#3a5a76; line-height:1.8;">
+        <div style="margin-top:1rem; font-size:0.75rem; color:#4b7a5e; line-height:1.8;">
             النموذج المستخدم:
-            <code style="background:rgba(129,140,248,0.1); color:#818cf8;
+            <code style="background:rgba(22,163,74,0.1); color:#16a34a;
                          padding:0.1rem 0.4rem; border-radius:4px;">claude-haiku</code>
             <br>
             <a href="https://console.anthropic.com" target="_blank"
-               style="color:#38bdf8; text-decoration:none;">← احصل على API Key</a>
+               style="color:#16a34a; text-decoration:none;">← احصل على API Key</a>
         </div>
         """, unsafe_allow_html=True)
 
@@ -603,8 +658,8 @@ with left_col:
     else:
         st.markdown("""
         <div class="upload-section">
-            <div style="font-size:2.5rem; margin-bottom:0.75rem; opacity:0.4">👁️</div>
-            <div style="font-size:0.88rem; color:#3a5a76;">اسحب وأفلت الصورة هنا<br>أو انقر للاختيار</div>
+            <div style="font-size:2.5rem; margin-bottom:0.75rem; opacity:0.5">👁️</div>
+            <div style="font-size:0.88rem; color:#6aaa85;">اسحب وأفلت الصورة هنا<br>أو انقر للاختيار</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -622,7 +677,7 @@ with right_col:
         st.markdown(f"""
         <div style="margin-bottom:1.5rem;">
             <div style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase;
-                        color:#5a7a96; margin-bottom:0.6rem;">نتيجة التشخيص</div>
+                        color:#6aaa85; margin-bottom:0.6rem;">نتيجة التشخيص</div>
             <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
                 <span style="font-size:1.8rem;">{info.get('icon','🔬')}</span>
                 <span style="font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800;
@@ -643,7 +698,7 @@ with right_col:
                 <div class="disease-card-text">{info['desc']}</div>
                 <div style="margin-top:0.7rem; padding-top:0.7rem;
                              border-top:1px solid rgba(56,189,248,0.1);">
-                    <span style="font-size:0.75rem; color:#38bdf8; font-weight:500;">التوصية: </span>
+                    <span style="font-size:0.75rem; color:#16a34a; font-weight:600;">التوصية: </span>
                     <span class="disease-card-text">{info['action']}</span>
                 </div>
             </div>
@@ -686,7 +741,7 @@ with right_col:
         st.markdown('<br>', unsafe_allow_html=True)
         st.markdown("""
         <div style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase;
-                    color:#5a7a96; margin-bottom:0.75rem;">التحليل البصري — Grad-CAM</div>
+                    color:#6aaa85; margin-bottom:0.75rem;">التحليل البصري — Grad-CAM</div>
         """, unsafe_allow_html=True)
 
         v1, v2 = st.columns(2)
@@ -703,26 +758,26 @@ with right_col:
         with st.expander("📊 جميع الاحتمالات"):
             for i in np.argsort(all_preds)[::-1]:
                 pct = float(all_preds[i]) * 100
-                bar_color = color if class_names[i] == pred else "#1e3a4a"
+                bar_color = color if class_names[i] == pred else "#bbf7d0"
                 st.markdown(f"""
                 <div style="display:flex; align-items:center; gap:0.75rem;
                              margin-bottom:0.5rem; font-size:0.82rem;">
-                    <div style="width:160px; color:#8ba3bf; white-space:nowrap;
+                    <div style="width:160px; color:#4b7a5e; white-space:nowrap;
                                 overflow:hidden; text-overflow:ellipsis;">{class_names[i]}</div>
-                    <div style="flex:1; background:rgba(255,255,255,0.05); border-radius:999px; height:6px; overflow:hidden;">
+                    <div style="flex:1; background:#dcfce7; border-radius:999px; height:6px; overflow:hidden;">
                         <div style="width:{pct:.1f}%; height:100%;
                                     background:{bar_color}; border-radius:999px;"></div>
                     </div>
-                    <div style="width:44px; text-align:right; color:#5a7a96;">{pct:.1f}%</div>
+                    <div style="width:44px; text-align:right; color:#6aaa85;">{pct:.1f}%</div>
                 </div>
                 """, unsafe_allow_html=True)
 
     else:
         st.markdown("""
         <div style="display:flex; flex-direction:column; align-items:center;
-                    justify-content:center; height:300px; opacity:0.3; text-align:center;">
+                    justify-content:center; height:300px; opacity:0.4; text-align:center;">
             <div style="font-size:3rem; margin-bottom:1rem;">🔬</div>
-            <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:#8ba3bf;">
+            <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:#15803d;">
                 في انتظار صورة للتحليل
             </div>
         </div>
