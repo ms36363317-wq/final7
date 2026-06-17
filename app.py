@@ -1,800 +1,810 @@
-import os
-import requests
 import streamlit as st
-import numpy as np
-import cv2
-import gdown
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-from PIL import Image
+import tempfile
+import os
+import subprocess
+import sys
+import zipfile
+import io
+import math
+import time
+from datetime import datetime
+from pathlib import Path
 
-# ==============================
-# Page Config
-# ==============================
+# Configure page
 st.set_page_config(
-    page_title="Assistant For Detection Of Retinal Diseases",
-    initial_sidebar_state="expanded"
+    page_title="Video Transcription App",
+    page_icon="🎥", 
+    layout="wide"
 )
 
-# ==============================
-# Custom CSS
-# ==============================
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
-
-    html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-
-    /* ═══════════════════════════════════════════
-       MEDICAL GREEN — LIGHT MODE
-       Primary:   #16a34a  (green-600)
-       Accent:    #15803d  (green-700)
-       Light bg:  #f0fdf4  (green-50)
-       Surface:   #ffffff
-       Border:    #bbf7d0  (green-200)
-       Text:      #14532d  (green-900)
-       Muted:     #4ade80  (green-400)
-    ═══════════════════════════════════════════ */
-
-    html, body, [class*="css"], .stApp, .main {
-        background-color: #f0fdf4 !important;
-        color: #166534 !important;
-    }
-
-    .stApp {
-        background: linear-gradient(150deg, #f0fdf4 0%, #dcfce7 40%, #f0fdf4 100%) !important;
-        color: #166534;
-    }
-
-    #MainMenu, footer, header { visibility: hidden; }
-    .block-container { padding: 0 2rem 4rem; max-width: 1200px; }
-
-    /* ── Hero ── */
-    .hero {
-        position: relative;
-        text-align: center;
-        padding: 3.5rem 2rem 2.5rem;
-        overflow: hidden;
-    }
-    .hero::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background:
-            radial-gradient(ellipse 70% 50% at 50% 0%, rgba(22,163,74,0.12) 0%, transparent 65%),
-            radial-gradient(ellipse 35% 25% at 10% 85%, rgba(21,128,61,0.08) 0%, transparent 60%),
-            radial-gradient(ellipse 40% 30% at 90% 70%, rgba(74,222,128,0.1) 0%, transparent 55%);
-        pointer-events: none;
-    }
-    .hero-eyebrow {
-        font-size: 0.75rem; font-weight: 600; letter-spacing: 0.28em;
-        text-transform: uppercase; color: #16a34a; margin-bottom: 0.75rem;
-    }
-    .hero-title {
-        font-family: 'Syne', sans-serif;
-        font-size: clamp(2.4rem, 5vw, 4rem);
-        font-weight: 800; line-height: 1.05;
-        letter-spacing: -0.02em; color: #14532d; margin: 0 0 1rem;
-    }
-    .hero-title span {
-        background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #4ade80 100%);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-    .hero-subtitle {
-        font-size: 1rem; font-weight: 300; color: #4b7a5e;
-        max-width: 600px; margin: 0 auto; line-height: 1.75;
-        text-align: center; display: block; width: 100%;
-    }
-
-    .divider {
-        height: 1.5px;
-        background: linear-gradient(90deg, transparent, rgba(22,163,74,0.4), transparent);
-        margin: 0 0 2.5rem;
-    }
-
-    /* ── Upload ── */
-    .upload-section {
-        background: #ffffff;
-        border: 2px dashed rgba(22,163,74,0.35);
-        border-radius: 20px; padding: 2.5rem 2rem;
-        text-align: center; margin-bottom: 2rem;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 12px rgba(22,163,74,0.07);
-    }
-    .upload-section:hover {
-        border-color: #16a34a;
-        background: #f0fdf4;
-        box-shadow: 0 4px 20px rgba(22,163,74,0.12);
-    }
-    .upload-label {
-        font-family: 'Syne', sans-serif; font-size: 1.1rem;
-        font-weight: 600; color: #15803d; margin-bottom: 0.4rem;
-    }
-    .upload-hint { font-size: 0.82rem; color: #6aaa85; }
-
-    [data-testid="stFileUploader"] { background: transparent !important; }
-    [data-testid="stFileUploader"] > div { border: none !important; background: transparent !important; padding: 0 !important; }
-    [data-testid="stFileUploader"] label { color: #16a34a !important; font-size: 0.9rem; }
-
-    /* ── Image Cards ── */
-    .img-card {
-        background: #ffffff;
-        border: 1px solid #bbf7d0;
-        border-radius: 14px;
-        padding: 0.6rem 0.6rem 0.5rem;
-        text-align: center;
-        max-width: 220px;
-        margin: 0 auto;
-        box-shadow: 0 4px 16px rgba(22,163,74,0.1);
-    }
-    .img-card-label {
-        font-size: 0.68rem; font-weight: 600;
-        letter-spacing: 0.18em; text-transform: uppercase;
-        color: #6aaa85; margin-top: 0.5rem;
-    }
-
-    /* ── Streamlit image ── */
-    [data-testid="stImage"] img {
-        border-radius: 10px;
-        width: 100%;
-        max-height: 200px;
-        object-fit: cover;
-    }
-
-    /* ── All Streamlit widgets text fix ── */
-    .stSelectbox label, .stTextInput label, .stToggle label,
-    .stRadio label, .stExpander summary, p, span, div {
-        color: #166534 !important;
-    }
-    .stSelectbox > div > div, .stTextInput > div > div > input {
-        background: #ffffff !important;
-        border-color: #bbf7d0 !important;
-        color: #14532d !important;
-    }
-
-    /* ── Progress Bar ── */
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #22c55e, #16a34a) !important;
-        border-radius: 999px !important;
-    }
-    .stProgress > div > div {
-        background: #dcfce7 !important;
-        border-radius: 999px !important; height: 8px !important;
-    }
-
-    /* ── Confidence ── */
-    .confidence-label {
-        font-size: 0.78rem; letter-spacing: 0.15em;
-        text-transform: uppercase; color: #6aaa85; margin-bottom: 0.5rem;
-    }
-    .confidence-value {
-        font-family: 'Syne', sans-serif; font-size: 2.4rem;
-        font-weight: 800; color: #14532d; line-height: 1;
-    }
-    .confidence-value span { font-size: 1rem; font-weight: 400; color: #6aaa85; }
-
-    /* ── Disease Card ── */
-    .disease-card {
-        background: #ffffff;
-        border: 1px solid #bbf7d0;
-        border-left: 4px solid #16a34a;
-        border-radius: 16px; padding: 1.2rem 1.4rem; margin-top: 1rem;
-        box-shadow: 0 2px 16px rgba(22,163,74,0.08);
-    }
-    .disease-card-title {
-        font-family: 'Syne', sans-serif; font-size: 0.95rem;
-        font-weight: 700; color: #15803d; margin-bottom: 0.4rem;
-    }
-    .disease-card-text { font-size: 0.85rem; color: #4b7a5e; line-height: 1.7; }
-
-    /* ── LLM Explanation Card ── */
-    .llm-card {
-        background: #f0fdf4;
-        border: 1px solid #86efac;
-        border-left: 4px solid #4ade80;
-        border-radius: 16px;
-        padding: 1.2rem 1.4rem;
-        margin-top: 1rem;
-        box-shadow: 0 2px 16px rgba(74,222,128,0.1);
-    }
-    .llm-card-title {
-        font-family: 'Syne', sans-serif; font-size: 0.95rem;
-        font-weight: 700; color: #16a34a; margin-bottom: 0.75rem;
-        display: flex; align-items: center; gap: 0.4rem;
-    }
-    .llm-line {
-        font-size: 0.86rem; color: #2d6a44;
-        line-height: 1.75; margin-bottom: 0.45rem;
-        padding-left: 0.6rem;
-        border-left: 2px solid rgba(22,163,74,0.35);
-    }
-    .llm-error {
-        font-size: 0.82rem; color: #b45309;
-        background: rgba(245,158,11,0.08);
-        border: 1px solid rgba(245,158,11,0.3);
-        border-radius: 8px; padding: 0.7rem 1rem;
-        margin-top: 0.5rem;
-    }
-
-    /* ── Ollama Model Selector ── */
-    .model-selector-label {
-        font-size: 0.72rem; letter-spacing: 0.18em;
-        text-transform: uppercase; color: #6aaa85;
-        margin-bottom: 0.4rem;
-    }
-
-    /* ── Disclaimer ── */
-    .disclaimer {
-        background: #fffbeb;
-        border: 1px solid #fde68a;
-        border-left: 4px solid #f59e0b;
-        border-radius: 12px; padding: 0.9rem 1.2rem;
-        font-size: 0.78rem; color: #92400e;
-        text-align: center; margin-top: 1rem; line-height: 1.65;
-    }
-
-    [data-testid="stSidebar"] { display: none !important; }
-    [data-testid="collapsedControl"] { display: none !important; }
-    button[kind="header"] { display: none !important; }
-
-    /* ── Expander ── */
-    .stExpander {
-        background: #ffffff !important;
-        border: 1px solid #bbf7d0 !important;
-        border-radius: 12px !important;
-    }
-
-    /* ── Buttons ── */
-    .stButton > button {
-        background: linear-gradient(135deg, #16a34a, #15803d) !important;
-        color: #ffffff !important;
-        border: none !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        transition: all 0.2s ease !important;
-        box-shadow: 0 2px 8px rgba(22,163,74,0.3) !important;
-    }
-    .stButton > button:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 16px rgba(22,163,74,0.4) !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ==============================
-# Constants
-# ==============================
-MODEL_PATH = "best_efficientnetb3.h5"
-FILE_ID = "1qnrKRAWa7UU5YbtT2UqGDbJij7uH6dIz"
-OLLAMA_URL = "http://localhost:11434/api/generate"
-ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
-
-# ==============================
-# Disease Info
-# ==============================
-disease_info = {
-    "Diabetic Retinopathy": {
-        "desc": "تلف في أوعية الدم الدقيقة بشبكية العين نتيجة مرض السكري. يُعدّ من الأسباب الرئيسية للعمى لدى البالغين.",
-        "action": "يُنصح بفحص دوري كل 6 أشهر ومراقبة مستوى السكر في الدم.",
-        "icon": "🩺"
-    },
-    "Disc Edema": {
-        "desc": "تورم في القرص البصري قد يشير إلى ارتفاع ضغط الدم داخل الجمجمة أو اضطرابات عصبية.",
-        "action": "يتطلب تقييمًا عصبيًا عاجلاً وصور أشعة للدماغ.",
-        "icon": "🧠"
-    },
-    "Healthy": {
-        "desc": "لم يُكتشف أي مؤشر مرضي. تبدو شبكية العين سليمة وبحالة جيدة.",
-        "action": "حافظ على فحوصات دورية سنوية للعين للاطمئنان على صحتها.",
-        "icon": "✅"
-    },
-    "Myopia": {
-        "desc": "قِصَر النظر: صعوبة في رؤية الأشياء البعيدة بوضوح بسبب طول محور مقلة العين.",
-        "action": "يمكن تصحيحه بالنظارات أو العدسات اللاصقة أو جراحة الليزر.",
-        "icon": "👓"
-    },
-    "Pterygium": {
-        "desc": "نسيج ليفي وعائي ينمو على سطح القرنية من الملتحمة، وقد يؤثر على الرؤية.",
-        "action": "قد يحتاج إلى استئصال جراحي إذا تقدّم نحو مركز القرنية.",
-        "icon": "🔬"
-    },
-    "Retinal Detachment": {
-        "desc": "انفصال الشبكية عن طبقة الظهارة الصباغية، وهو طارئ طبي يستوجب تدخلاً فوريًا.",
-        "action": "توجّه فورًا إلى أقرب طوارئ عيون — يمكن أن يؤدي التأخير إلى فقدان البصر نهائيًا.",
-        "icon": "🚨"
-    },
-    "Retinitis Pigmentosa": {
-        "desc": "مجموعة اضطرابات وراثية تُسبب تدهورًا تدريجيًا في خلايا الشبكية المستقبلة للضوء.",
-        "action": "لا يوجد علاج شافٍ حتى الآن؛ التدبير يركز على إبطاء التقدم وتحسين جودة الحياة.",
-        "icon": "🧬"
-    },
-}
-
-severity_color = {
-    "Healthy": "#22c55e",
-    "Myopia": "#f59e0b",
-    "Pterygium": "#f59e0b",
-    "Diabetic Retinopathy": "#ef4444",
-    "Disc Edema": "#ef4444",
-    "Retinal Detachment": "#dc2626",
-    "Retinitis Pigmentosa": "#ef4444",
-}
-
-# ==============================
-# LLM Explanation — Ollama أو Claude API
-# ==============================
-PROMPT_TEMPLATE = """You are an ophthalmology AI assistant.
-
-Write exactly 5 short medical lines about this eye disease prediction:
-
-Prediction: {disease}
-Confidence: {confidence:.1f}%
-
-Structure (5 lines only, no headers, no repetition):
-1. Prediction statement.
-2. Short clinical definition.
-3. Key symptoms the patient may notice.
-4. Severity level (Mild / Moderate / Severe / Emergency).
-5. Recommended next step."""
-
-
-def _clean_lines(text: str) -> str:
-    """خذ أول 5 أسطر غير فارغة."""
-    lines = [l.strip() for l in text.split("\n") if l.strip()]
-    return "\n".join(lines[:5])
-
-
-def _explain_via_ollama(disease: str, confidence: float, ollama_model: str, ollama_url: str) -> str:
-    prompt = PROMPT_TEMPLATE.format(disease=disease, confidence=confidence * 100)
-    payload = {
-        "model": ollama_model,
-        "prompt": prompt,
-        "stream": False,
-        "options": {
-            "temperature": 0.1,
-            "num_predict": 120,
-            "repeat_penalty": 1.2,
-            "num_ctx": 512,
-        },
-    }
-    api_url = f"{ollama_url.rstrip('/')}/api/generate"
-    response = requests.post(api_url, json=payload, timeout=180)
-    response.raise_for_status()
-    raw = response.json().get("response", "").strip()
-    return _clean_lines(raw)
-
-
-def _test_ollama_connection(ollama_url: str) -> tuple:
-    """يختبر الاتصال بـ Ollama ويعيد (نجح، رسالة)."""
+def install_package(package):
+    """Install a Python package"""
     try:
-        r = requests.get(ollama_url.rstrip("/"), timeout=5)
-        if r.status_code == 200:
-            return True, "✅ Ollama يعمل بنجاح!"
-        return False, f"⚠️ استجابة غير متوقعة: {r.status_code}"
-    except requests.exceptions.ConnectionError:
-        return False, "❌ لا يمكن الاتصال — تأكد أن: ollama serve يعمل"
-    except requests.exceptions.Timeout:
-        return False, "❌ انتهت المهلة — الخادم لا يستجيب"
-    except Exception as e:
-        return False, f"❌ خطأ: {e}"
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        return True
+    except:
+        return False
 
-
-def _explain_via_claude(disease: str, confidence: float, api_key: str) -> str:
-    prompt = PROMPT_TEMPLATE.format(disease=disease, confidence=confidence * 100)
-    response = requests.post(
-        ANTHROPIC_API_URL,
-        headers={
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
-        json={
-            "model": "claude-haiku-4-5-20251001",
-            "max_tokens": 300,
-            "messages": [{"role": "user", "content": prompt}],
-        },
-        timeout=30,
-    )
-    response.raise_for_status()
-    raw = response.json()["content"][0]["text"].strip()
-    return _clean_lines(raw)
-
-
-def local_llm_explain(
-    disease: str,
-    confidence: float,
-    ollama_model: str = "llama3",
-    ollama_url: str = "http://localhost:11434",
-    backend: str = "ollama",
-    anthropic_api_key: str = "",
-) -> str:
+def check_ffmpeg():
+    """Check if FFmpeg is available"""
     try:
-        if backend == "claude":
-            if not anthropic_api_key.strip():
-                return "ERROR: أدخل Anthropic API Key في إعدادات الشريط الجانبي."
-            return _explain_via_claude(disease, confidence, anthropic_api_key.strip())
-        else:
-            return _explain_via_ollama(disease, confidence, ollama_model, ollama_url)
+        subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
+        return True
+    except:
+        return False
 
-    except requests.exceptions.ConnectionError:
-        if backend == "ollama":
-            return f"ERROR: تعذّر الاتصال بـ Ollama على {ollama_url} — تأكد أن: ollama serve يعمل"
-        return "ERROR: تعذّر الاتصال بـ Anthropic API — تحقق من اتصالك بالإنترنت."
-    except requests.exceptions.Timeout:
-        return "ERROR: انتهت مهلة الاستجابة — النموذج بطيء أو غير محمّل."
-    except requests.exceptions.HTTPError as e:
-        status = e.response.status_code if e.response is not None else "?"
-        if status == 401:
-            return "ERROR: API Key غير صالح — تحقق من المفتاح."
-        if status == 404 and backend == "ollama":
-            return f"ERROR: النموذج «{ollama_model}» غير محمّل — نفّذ: ollama pull {ollama_model}"
-        return f"ERROR: HTTP {status} — {e}"
-    except Exception as e:
-        return f"ERROR: خطأ غير متوقع: {e}"
-
-
-# ==============================
-# Load Vision Model
-# ==============================
-@st.cache_resource
-def load_model_cached():
-    if not os.path.exists(MODEL_PATH):
-        with st.spinner("⬇️ جاري تحميل النموذج..."):
-            gdown.download(
-                f"https://drive.google.com/uc?id={FILE_ID}",
-                MODEL_PATH,
-                quiet=False
-            )
-
-    if not os.path.exists(MODEL_PATH):
-        st.error("❌ النموذج غير موجود")
-        st.stop()
-
-    if os.path.getsize(MODEL_PATH) < 5_000_000:
-        st.error("❌ ملف النموذج تالف")
-        st.stop()
-
+def extract_audio_ffmpeg(video_path):
+    """Extract audio using FFmpeg"""
     try:
-        return load_model(MODEL_PATH)
+        # Create temp audio file
+        audio_path = tempfile.mktemp(suffix='.wav')
+        
+        # Get duration
+        duration_cmd = ['ffprobe', '-v', 'quiet', '-show_entries', 'format=duration', '-of', 'csv=p=0', video_path]
+        result = subprocess.run(duration_cmd, capture_output=True, text=True, check=True)
+        duration = float(result.stdout.strip())
+        
+        # Extract audio
+        cmd = ['ffmpeg', '-i', video_path, '-vn', '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1', '-y', audio_path]
+        subprocess.run(cmd, capture_output=True, check=True)
+        
+        return audio_path, duration
     except Exception as e:
-        st.error(f"❌ فشل تحميل النموذج: {e}")
-        st.stop()
+        return None, None
 
-
-# ==============================
-# Classes
-# ==============================
-class_names = [
-    'Diabetic Retinopathy', 'Disc Edema', 'Healthy',
-    'Myopia', 'Pterygium', 'Retinal Detachment', 'Retinitis Pigmentosa'
-]
-
-# ==============================
-# Helpers
-# ==============================
-def preprocess(img):
-    img = img.resize((300, 300))
-    arr = np.array(img)
-    arr = tf.keras.applications.efficientnet.preprocess_input(arr)
-    return np.expand_dims(arr, axis=0)
-
-
-def predict(img, model):
-    preds = model.predict(preprocess(img))
-    idx = np.argmax(preds[0])
-    return class_names[idx], float(np.max(preds)), preds[0]
-
-
-def overlay_heatmap(img, heatmap):
-    arr = np.array(img.resize((300, 300)))
-    return cv2.addWeighted(arr, 0.75, heatmap, 0.25, 0)
-
-
-def gradcam(img, model):
-    arr = np.array(img.resize((300, 300)))
-    arr = tf.keras.applications.efficientnet.preprocess_input(arr)
-    arr = np.expand_dims(arr, axis=0)
-
-    target_layer = next(
-        (l for l in reversed(model.layers) if isinstance(l, tf.keras.layers.Conv2D)),
-        None
-    )
-
-    grad_model = tf.keras.models.Model(
-        inputs=model.inputs,
-        outputs=[target_layer.output, model.output]
-    )
-
-    with tf.GradientTape() as tape:
-        outputs = grad_model(arr)
-        conv_outputs = outputs[0]
-        predictions = outputs[1]
-
-        if isinstance(predictions, list):
-            predictions = predictions[0]
-
-        if predictions.shape[-1] == 1:
-            loss = predictions[:, 0]
-        else:
-            class_idx = tf.argmax(predictions[0]).numpy()
-            loss = predictions[:, class_idx]
-
-    grads = tape.gradient(loss, conv_outputs)
-    grads = grads / (tf.reduce_mean(tf.abs(grads)) + 1e-8)
-
-    weights = tf.reduce_mean(grads, axis=(1, 2))
-    cam = tf.reduce_sum(weights[:, None, None, :] * conv_outputs, axis=-1)[0].numpy()
-
-    cam = np.maximum(cam, 0)
-    if np.max(cam) > 0:
-        cam /= np.max(cam)
-
-    cam = np.power(cam, 0.3)
-    cam = cv2.resize(cam, (300, 300))
-
-    return cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
-
-
-# ==============================
-# Hero
-# ==============================
-st.markdown("""
-<div class="hero">
-    <h1 class="hero-title">Assistant For Detection Of Retinal Diseases</h1>
-</div>
-<div class="divider"></div>
-""", unsafe_allow_html=True)
-
-# ==============================
-# Load Vision Model
-# ==============================
-model = load_model_cached()
-
-# ==============================
-# Sidebar — LLM Settings
-# ==============================
-with st.sidebar:
-    pass  # sidebar فارغ — القائمة انتقلت للداخل
-
-# Default LLM variables
-enable_llm = False
-ollama_model = "llama3"
-ollama_url = "http://localhost:11434"
-anthropic_api_key = ""
-backend_key = "ollama"
-
-# ==============================
-# Layout — 3 columns: diseases | upload | results
-# ==============================
-diseases_col, left_col, right_col = st.columns([1, 1.1, 1.8], gap="medium")
-
-# ── Diseases Panel ──
-with diseases_col:
-    st.markdown("""
-    <div style="font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700;
-                color:#16a34a; margin-bottom:0.9rem; padding-bottom:0.5rem;
-                border-bottom:2px solid rgba(22,163,74,0.25);">
-        🔬 الأمراض المكتشفة
-    </div>
-    <div style="display:flex; flex-direction:column; gap:0.45rem;">
-        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                    border:1px solid #bbf7d0; border-left:4px solid #ef4444;
-                    border-radius:10px; padding:0.5rem 0.7rem;">
-            <span style="font-size:1rem;">🩺</span>
-            <div>
-                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Diabetic Retinopathy</div>
-                <div style="font-size:0.66rem; color:#6aaa85;">اعتلال الشبكية السكري</div>
-            </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                    border:1px solid #bbf7d0; border-left:4px solid #ef4444;
-                    border-radius:10px; padding:0.5rem 0.7rem;">
-            <span style="font-size:1rem;">🧠</span>
-            <div>
-                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Disc Edema</div>
-                <div style="font-size:0.66rem; color:#6aaa85;">وذمة القرص البصري</div>
-            </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                    border:1px solid #bbf7d0; border-left:4px solid #22c55e;
-                    border-radius:10px; padding:0.5rem 0.7rem;">
-            <span style="font-size:1rem;">✅</span>
-            <div>
-                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Healthy</div>
-                <div style="font-size:0.66rem; color:#6aaa85;">شبكية سليمة</div>
-            </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                    border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
-                    border-radius:10px; padding:0.5rem 0.7rem;">
-            <span style="font-size:1rem;">👓</span>
-            <div>
-                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Myopia</div>
-                <div style="font-size:0.66rem; color:#6aaa85;">قِصَر النظر</div>
-            </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                    border:1px solid #bbf7d0; border-left:4px solid #f59e0b;
-                    border-radius:10px; padding:0.5rem 0.7rem;">
-            <span style="font-size:1rem;">🔬</span>
-            <div>
-                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Pterygium</div>
-                <div style="font-size:0.66rem; color:#6aaa85;">الظفرة</div>
-            </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                    border:1px solid #bbf7d0; border-left:4px solid #dc2626;
-                    border-radius:10px; padding:0.5rem 0.7rem;">
-            <span style="font-size:1rem;">🚨</span>
-            <div>
-                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Retinal Detachment</div>
-                <div style="font-size:0.66rem; color:#6aaa85;">انفصال الشبكية</div>
-            </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.55rem; background:#fff;
-                    border:1px solid #bbf7d0; border-left:4px solid #ef4444;
-                    border-radius:10px; padding:0.5rem 0.7rem;">
-            <span style="font-size:1rem;">🧬</span>
-            <div>
-                <div style="font-size:0.78rem; font-weight:600; color:#14532d;">Retinitis Pigmentosa</div>
-                <div style="font-size:0.66rem; color:#6aaa85;">التهاب الشبكية الصباغي</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with left_col:
-    st.markdown('<div class="upload-label">رفع صورة العين</div>', unsafe_allow_html=True)
-    st.markdown('<div class="upload-hint">الصيغ المدعومة: JPG · PNG</div>', unsafe_allow_html=True)
-    st.markdown('<br>', unsafe_allow_html=True)
-
-    uploaded_file = st.file_uploader(
-        label="اختر صورة",
-        type=["jpg", "jpeg", "png"],
-        label_visibility="collapsed"
-    )
-
-    if uploaded_file:
-        image = Image.open(uploaded_file).convert("RGB")
-        thumb = image.copy()
-        thumb.thumbnail((210, 210))
-        st.markdown('<div class="img-card">', unsafe_allow_html=True)
-        st.image(thumb, use_container_width=False, width=220)
-        st.markdown('<div class="img-card-label">الصورة الأصلية</div></div>', unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class="upload-section">
-            <div style="font-size:2.5rem; margin-bottom:0.75rem; opacity:0.5">👁️</div>
-            <div style="font-size:0.88rem; color:#6aaa85;">اسحب وأفلت الصورة هنا<br>أو انقر للاختيار</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-with right_col:
-    if uploaded_file:
-        with st.spinner("🔍 جاري التحليل..."):
-            pred, conf, all_preds = predict(image, model)
-            heatmap = gradcam(image, model)
-            overlay = overlay_heatmap(image, heatmap)
-
-        color = severity_color.get(pred, "#38bdf8")
-        info = disease_info.get(pred, {})
-
-        # ── Diagnosis ──
-        st.markdown(f"""
-        <div style="margin-bottom:1.5rem;">
-            <div style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase;
-                        color:#6aaa85; margin-bottom:0.6rem;">نتيجة التشخيص</div>
-            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                <span style="font-size:1.8rem;">{info.get('icon','🔬')}</span>
-                <span style="font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800;
-                             color:{color}; letter-spacing:-0.01em;">{pred}</span>
-            </div>
-            <div class="confidence-label">مستوى الثقة</div>
-            <div class="confidence-value">{conf*100:.1f}<span>%</span></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.progress(int(conf * 100))
-
-        # ── Disease Card ──
-        if info:
-            st.markdown(f"""
-            <div class="disease-card">
-                <div class="disease-card-title">📋 عن هذه الحالة</div>
-                <div class="disease-card-text">{info['desc']}</div>
-                <div style="margin-top:0.7rem; padding-top:0.7rem;
-                             border-top:1px solid rgba(56,189,248,0.1);">
-                    <span style="font-size:0.75rem; color:#16a34a; font-weight:600;">التوصية: </span>
-                    <span class="disease-card-text">{info['action']}</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        # ── LLM Explanation ──
-        if enable_llm:
-            backend_label = "Claude API (Haiku)" if backend_key == "claude" else f"Ollama — {ollama_model}"
-            with st.spinner(f"🤖 جاري توليد الشرح الطبي عبر {backend_label}..."):
-                llm_result = local_llm_explain(
-                    pred, conf,
-                    ollama_model=ollama_model,
-                    ollama_url=ollama_url,
-                    backend=backend_key,
-                    anthropic_api_key=anthropic_api_key,
-                )
-
-            if llm_result.startswith("ERROR:"):
-                error_msg = llm_result.replace("ERROR:", "").strip()
-                st.markdown(f"""
-                <div class="llm-card">
-                    <div class="llm-card-title">🤖 شرح النموذج اللغوي — {backend_label}</div>
-                    <div class="llm-error">⚠️ {error_msg}</div>
-                </div>
-                """, unsafe_allow_html=True)
+def extract_audio_moviepy(video_path):
+    """Extract audio using MoviePy as fallback"""
+    try:
+        # Try to install moviepy if needed
+        try:
+            from moviepy.editor import VideoFileClip
+        except ImportError:
+            st.info("📦 Installing MoviePy...")
+            if install_package("moviepy"):
+                from moviepy.editor import VideoFileClip
             else:
-                lines = [l.strip() for l in llm_result.split("\n") if l.strip()]
-                lines_html = "".join(
-                    f'<div class="llm-line">{line}</div>'
-                    for line in lines
-                )
-                st.markdown(f"""
-                <div class="llm-card">
-                    <div class="llm-card-title">🤖 شرح النموذج اللغوي — {backend_label}</div>
-                    {lines_html}
-                </div>
-                """, unsafe_allow_html=True)
+                return None, None
+        
+        # Extract audio
+        audio_path = tempfile.mktemp(suffix='.wav')
+        video = VideoFileClip(video_path)
+        duration = video.duration
+        video.audio.write_audiofile(audio_path, verbose=False, logger=None)
+        video.close()
+        
+        return audio_path, duration
+    except Exception as e:
+        return None, None
 
-        # ── Grad-CAM ──
-        st.markdown('<br>', unsafe_allow_html=True)
-        st.markdown("""
-        <div style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase;
-                    color:#6aaa85; margin-bottom:0.75rem;">التحليل البصري — Grad-CAM</div>
-        """, unsafe_allow_html=True)
+def split_audio_chunks(audio_path, duration, chunk_duration=30):
+    """Split audio into chunks"""
+    chunks = []
+    num_chunks = math.ceil(duration / chunk_duration)
+    
+    os.makedirs("audio_chunks", exist_ok=True)
+    
+    for i in range(num_chunks):
+        start_time = i * chunk_duration
+        chunk_file = f"audio_chunks/chunk_{i+1:03d}.wav"
+        
+        if check_ffmpeg():
+            # Use FFmpeg to split
+            cmd = ['ffmpeg', '-i', audio_path, '-ss', str(start_time), '-t', str(chunk_duration), '-y', chunk_file]
+            try:
+                subprocess.run(cmd, capture_output=True, check=True)
+                end_time = min(start_time + chunk_duration, duration)
+                
+                chunks.append({
+                    'chunk_number': i + 1,
+                    'start_time': start_time,
+                    'end_time': end_time,
+                    'duration': end_time - start_time,
+                    'file_path': chunk_file,
+                    'file_size': os.path.getsize(chunk_file)
+                })
+            except:
+                continue
+        else:
+            # Try with pydub as fallback
+            try:
+                if not 'AudioSegment' in globals():
+                    try:
+                        from pydub import AudioSegment
+                    except ImportError:
+                        install_package("pydub")
+                        from pydub import AudioSegment
+                
+                audio = AudioSegment.from_wav(audio_path)
+                start_ms = int(start_time * 1000)
+                end_ms = int(min((start_time + chunk_duration) * 1000, len(audio)))
+                
+                chunk = audio[start_ms:end_ms]
+                chunk.export(chunk_file, format="wav")
+                
+                chunks.append({
+                    'chunk_number': i + 1,
+                    'start_time': start_time,
+                    'end_time': end_ms / 1000,
+                    'duration': (end_ms - start_ms) / 1000,
+                    'file_path': chunk_file,
+                    'file_size': os.path.getsize(chunk_file)
+                })
+            except:
+                continue
+    
+    return chunks
 
-        v1, v2 = st.columns(2)
-        with v1:
-            st.markdown('<div class="img-card">', unsafe_allow_html=True)
-            st.image(heatmap, width=200, channels="BGR")
-            st.markdown('<div class="img-card-label">خريطة الحرارة</div></div>', unsafe_allow_html=True)
-        with v2:
-            st.markdown('<div class="img-card">', unsafe_allow_html=True)
-            st.image(overlay, width=200, channels="BGR")
-            st.markdown('<div class="img-card-label">الصورة المدمجة</div></div>', unsafe_allow_html=True)
+def format_time(seconds):
+    """Format seconds as MM:SS"""
+    m, s = divmod(int(seconds), 60)
+    return f"{m:02d}:{s:02d}"
 
-        # ── All Probabilities ──
-        with st.expander("📊 جميع الاحتمالات"):
-            for i in np.argsort(all_preds)[::-1]:
-                pct = float(all_preds[i]) * 100
-                bar_color = color if class_names[i] == pred else "#bbf7d0"
-                st.markdown(f"""
-                <div style="display:flex; align-items:center; gap:0.75rem;
-                             margin-bottom:0.5rem; font-size:0.82rem;">
-                    <div style="width:160px; color:#4b7a5e; white-space:nowrap;
-                                overflow:hidden; text-overflow:ellipsis;">{class_names[i]}</div>
-                    <div style="flex:1; background:#dcfce7; border-radius:999px; height:6px; overflow:hidden;">
-                        <div style="width:{pct:.1f}%; height:100%;
-                                    background:{bar_color}; border-radius:999px;"></div>
-                    </div>
-                    <div style="width:44px; text-align:right; color:#6aaa85;">{pct:.1f}%</div>
-                </div>
-                """, unsafe_allow_html=True)
+def create_templates(chunks):
+    """Create transcription templates"""
+    os.makedirs("templates", exist_ok=True)
+    templates = []
+    
+    for chunk in chunks:
+        content = f"""TRANSCRIPTION TEMPLATE - CHUNK {chunk['chunk_number']:03d}
+{'='*60}
+Time Range: {format_time(chunk['start_time'])} - {format_time(chunk['end_time'])}
+Duration: {chunk['duration']:.1f} seconds
+Audio File: {chunk['file_path']}
+{'='*60}
 
+INSTRUCTIONS:
+1. Play the audio file above
+2. Type what you hear below
+3. Replace [TRANSCRIPTION NEEDED] with actual text
+
+TRANSCRIPTION:
+[TRANSCRIPTION NEEDED - Replace this with the spoken content]
+
+NOTES:
+- Include all speech, even "um", "uh"
+- Use [unclear] for inaudible parts
+- Use [music] for background music
+- Indicate speakers: "Speaker 1:", "Speaker 2:"
+"""
+        
+        template_file = f"templates/chunk_{chunk['chunk_number']:03d}_template.txt"
+        with open(template_file, 'w', encoding='utf-8') as f:
+            f.write(content)
+        templates.append(template_file)
+    
+    return templates
+
+def transcribe_audio_chunks(chunks):
+    """Transcribe audio chunks using OpenAI Whisper"""
+    try:
+        import whisper
+    except ImportError:
+        st.info("📦 Installing OpenAI Whisper...")
+        if not install_package("openai-whisper"):
+            st.error("❌ Failed to install Whisper. Please install manually: pip install openai-whisper")
+            return None
+        
+        try:
+            import whisper
+        except ImportError:
+            st.error("❌ Whisper import failed. Please restart the app after installation.")
+            return None
+    
+    # Load model (using base model for speed/accuracy balance)
+    try:
+        model = whisper.load_model("base")
+    except Exception as e:
+        st.error(f"❌ Failed to load Whisper model: {e}")
+        return None
+    
+    transcriptions = []
+    
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    for i, chunk in enumerate(chunks):
+        status_text.text(f"🎙️ Transcribing chunk {i+1}/{len(chunks)}...")
+        
+        try:
+            result = model.transcribe(chunk['file_path'])
+            transcription = result['text'].strip()
+            
+            transcriptions.append({
+                'chunk_number': chunk['chunk_number'],
+                'start_time': chunk['start_time'],
+                'end_time': chunk['end_time'],
+                'transcription': transcription,
+                'confidence': result.get('confidence', 0)
+            })
+            
+        except Exception as e:
+            transcriptions.append({
+                'chunk_number': chunk['chunk_number'],
+                'start_time': chunk['start_time'],
+                'end_time': chunk['end_time'],
+                'transcription': f"[TRANSCRIPTION FAILED: {str(e)}]",
+                'confidence': 0
+            })
+        
+        progress_bar.progress((i + 1) / len(chunks))
+    
+    progress_bar.empty()
+    status_text.empty()
+    
+    return transcriptions
+
+def create_download_kit(chunks, templates, metadata, transcriptions=None):
+    """Create downloadable ZIP kit"""
+    zip_buffer = io.BytesIO()
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Add instructions
+        instructions = f"""VIDEO TRANSCRIPTION PROJECT
+{'='*50}
+Video: {metadata['filename']}
+Duration: {format_time(metadata['duration'])}
+Chunks: {len(chunks)} x {metadata['chunk_duration']}s each
+Created: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+AUTOMATIC TRANSCRIPTION:
+1. Install: pip install openai-whisper
+2. Run: whisper audio_chunks/*.wav --output_format txt
+
+MANUAL TRANSCRIPTION:
+1. Play each audio file in audio_chunks/
+2. Fill corresponding template in templates/
+3. Replace [TRANSCRIPTION NEEDED] with actual text
+
+CHUNK LIST:
+"""
+        for chunk in chunks:
+            instructions += f"\n{chunk['chunk_number']:03d}: {format_time(chunk['start_time'])}-{format_time(chunk['end_time'])} | {chunk['file_path']}"
+        
+        zf.writestr("README.txt", instructions)
+        
+        # Add audio chunks
+        for chunk in chunks:
+            if os.path.exists(chunk['file_path']):
+                zf.write(chunk['file_path'], chunk['file_path'])
+        
+        # Add templates
+        for template in templates:
+            if os.path.exists(template):
+                zf.write(template, template)
+        
+        # Add transcriptions if available
+        if transcriptions:
+            os.makedirs("transcriptions", exist_ok=True)
+            
+            # Create full transcription file
+            full_transcript = f"COMPLETE TRANSCRIPTION - {metadata['filename']}\n{'='*60}\n\n"
+            
+            for trans in transcriptions:
+                full_transcript += f"[{format_time(trans['start_time'])} - {format_time(trans['end_time'])}]\n"
+                full_transcript += f"{trans['transcription']}\n\n"
+            
+            zf.writestr("transcriptions/full_transcription.txt", full_transcript)
+            
+            # Create individual transcription files as 0.txt, 30.txt, 60.txt, etc. (time-based naming)
+            for trans in transcriptions:
+                # Calculate time-based filename (start time of chunk)
+                start_time_seconds = (trans['chunk_number'] - 1) * metadata['chunk_duration']
+                transcription_file = f"transcriptions/{start_time_seconds}.txt"
+                
+                # Save transcription text only to individual files
+                with open(transcription_file, 'w', encoding='utf-8') as f:
+                    f.write(trans['transcription'])
+                
+                # Add to ZIP file
+                zf.write(transcription_file, f"transcriptions/{start_time_seconds}.txt")
+    
+    zip_buffer.seek(0)
+    return zip_buffer.getvalue()
+
+def main():
+    st.title("🎥 Video Transcription App")
+    st.markdown("**Convert videos to text in manageable 30-second chunks!**")
+    
+    # Sidebar
+    st.sidebar.header("⚙️ Settings")
+    chunk_duration = st.sidebar.slider("Chunk Duration (seconds)", 15, 60, 30, 5)
+    
+    # System status
+    st.sidebar.header("🔧 System Status")
+    ffmpeg_available = check_ffmpeg()
+    
+    if ffmpeg_available:
+        st.sidebar.success("✅ FFmpeg available")
     else:
-        st.markdown("""
-        <div style="display:flex; flex-direction:column; align-items:center;
-                    justify-content:center; height:300px; opacity:0.4; text-align:center;">
-            <div style="font-size:3rem; margin-bottom:1rem;">🔬</div>
-            <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:#15803d;">
-                في انتظار صورة للتحليل
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.sidebar.error("❌ FFmpeg not found")
+        st.sidebar.markdown("""
+        **Install FFmpeg:**
+        1. Download: https://ffmpeg.org/
+        2. Add to PATH
+        3. Restart app
+        """)
+    
+    # Main content
+    st.header("📁 Upload Video File")
+    
+    uploaded_file = st.file_uploader(
+        "Choose a video file",
+        type=['mp4', 'mov', 'avi', 'mkv', 'wmv'],
+        help="Supported: MP4, MOV, AVI, MKV, WMV"
+    )
+    
+    if uploaded_file:
+        file_size = uploaded_file.size / 1024 / 1024
+        st.success(f"✅ File ready: **{uploaded_file.name}** ({file_size:.1f} MB)")
+        
+        if not ffmpeg_available:
+            st.error("❌ Cannot process without FFmpeg. Please install FFmpeg first.")
+            return
+        
+        if st.button("🚀 Process Video", type="primary"):
+            progress = st.progress(0)
+            status = st.empty()
+            
+            start_time = time.time()
+            
+            try:
+                # Save uploaded file
+                with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as temp_video:
+                    temp_video.write(uploaded_file.read())
+                    video_path = temp_video.name
+                
+                progress.progress(0.1)
+                status.info("📁 Video file prepared")
+                
+                # Extract audio
+                status.info("🎵 Extracting audio...")
+                audio_path, duration = extract_audio_ffmpeg(video_path)
+                
+                if not audio_path:
+                    st.error("❌ Failed to extract audio")
+                    return
+                
+                progress.progress(0.4)
+                status.info(f"✅ Audio extracted - Duration: {format_time(duration)}")
+                
+                # Split into chunks
+                status.info("✂️ Creating audio chunks...")
+                chunks = split_audio_chunks(audio_path, duration, chunk_duration)
+                
+                if not chunks:
+                    st.error("❌ Failed to create chunks")
+                    return
+                
+                progress.progress(0.7)
+                status.info(f"✅ Created {len(chunks)} audio chunks")
+                
+                # Create templates
+                status.info("📝 Creating transcription templates...")
+                templates = create_templates(chunks)
+                
+                progress.progress(0.9)
+                
+                # Transcribe audio chunks
+                status.info("🎙️ Transcribing audio chunks...")
+                transcriptions = transcribe_audio_chunks(chunks)
+                
+                if transcriptions:
+                    status.info("✅ Transcription completed!")
+                else:
+                    status.info("⚠️ Transcription skipped (Whisper not available)")
+                
+                # Create download kit
+                status.info("📦 Preparing download kit...")
+                metadata = {
+                    'filename': uploaded_file.name,
+                    'duration': duration,
+                    'chunk_duration': chunk_duration
+                }
+                
+                kit_data = create_download_kit(chunks, templates, metadata, transcriptions)
+                
+                # Store results
+                st.session_state.results = {
+                    'chunks': chunks,
+                    'templates': templates,
+                    'transcriptions': transcriptions,
+                    'metadata': metadata,
+                    'kit_data': kit_data
+                }
+                
+                progress.progress(1.0)
+                elapsed = time.time() - start_time
+                status.success(f"🎉 Completed in {elapsed:.1f} seconds!")
+                
+                # Cleanup
+                os.unlink(video_path)
+                os.unlink(audio_path)
+                
+            except Exception as e:
+                st.error(f"❌ Processing failed: {e}")
 
-# ==============================
-# Disclaimer
-# ==============================
-st.markdown("""
-<div class="disclaimer">
-    ⚠️ <strong>تنبيه طبي:</strong> هذا النظام أداةٌ مساعدة للفحص الأولي ولا يُغني عن استشارة طبيب متخصص.
-    يُرجى مراجعة طبيب عيون معتمد للتشخيص النهائي والعلاج المناسب.
-</div>
-""", unsafe_allow_html=True)
+# Show results
+if 'results' in st.session_state:
+    results = st.session_state.results
+    chunks = results['chunks']
+    metadata = results['metadata']
+    
+    st.header("📊 Processing Results")
+    
+    # Metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Video Duration", format_time(metadata['duration']))
+    with col2:
+        st.metric("Audio Chunks", len(chunks))
+    with col3:
+        st.metric("Chunk Size", f"{metadata['chunk_duration']}s")
+    with col4:
+        total_size = sum(chunk['file_size'] for chunk in chunks) / 1024 / 1024
+        st.metric("Total Audio", f"{total_size:.1f} MB")
+    
+    # Download section
+    st.header("📥 Download Transcription Kit")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.download_button(
+            "📦 Download Complete Kit (Audio + Templates)",
+            results['kit_data'],
+            f"transcription_kit_{Path(metadata['filename']).stem}.zip",
+            "application/zip",
+            type="primary",
+            use_container_width=True
+        )
+    
+    with col2:
+        kit_contents = f"""
+        **Kit Contents:**
+        • {len(chunks)} audio chunks
+        • {len(chunks)} text templates"""
+        
+        if results.get('transcriptions'):
+            kit_contents += f"\n• {len(results['transcriptions'])} transcriptions"
+        
+        kit_contents += "\n• Instructions & setup guide"
+        
+        st.info(kit_contents)
+    
+    # Transcription options
+    st.header("🎙️ Transcription Options")
+    
+    tab1, tab2 = st.tabs(["🤖 Automatic (Whisper)", "✍️ Manual"])
+    
+    with tab1:
+        if results.get('transcriptions'):
+            st.success("✅ **Automatic transcription completed!**")
+            st.markdown("**Transcriptions are included in your download kit.**")
+        else:
+            st.markdown("""
+            **Using OpenAI Whisper (Recommended):**
+            
+            1. **Install Whisper:**
+            ```bash
+            pip install openai-whisper
+            ```
+            
+            2. **Transcribe all chunks:**
+            ```bash
+            whisper audio_chunks/*.wav --output_format txt --model base
+            ```
+            
+            3. **Or transcribe individually:**
+            ```bash
+            whisper audio_chunks/chunk_001.wav --output_format txt
+            ```
+            
+            **Model Options:**
+            - `tiny` - Fastest, least accurate
+            - `base` - Good balance (recommended)
+            - `small` - Better accuracy
+            - `medium` - High accuracy
+            - `large` - Best accuracy, slowest
+            """)
+    
+    with tab2:
+        st.markdown("""
+        **Manual Transcription Steps:**
+        
+        1. **Download the kit** above
+        2. **Extract the ZIP file**
+        3. **For each audio chunk:**
+           - Play `audio_chunks/chunk_XXX.wav`
+           - Open `templates/chunk_XXX_template.txt`
+           - Replace `[TRANSCRIPTION NEEDED]` with what you hear
+           - Save the file
+        
+        **Tips:**
+        - Use good headphones
+        - Play chunks multiple times if needed
+        - Include all speech (even "um", "uh")
+        - Mark unclear parts as `[unclear]`
+        - Note speaker changes: `Speaker 1:`, `Speaker 2:`
+        """)
+    
+    # Display transcriptions if available
+    if results.get('transcriptions'):
+        st.header("📝 Transcriptions")
+        
+        # Full transcription view
+        with st.expander("📄 Full Transcription", expanded=True):
+            full_text = ""
+            for trans in results['transcriptions']:
+                full_text += f"**[{format_time(trans['start_time'])} - {format_time(trans['end_time'])}]**\n"
+                full_text += f"{trans['transcription']}\n\n"
+            
+            st.markdown(full_text)
+        
+        # Individual chunks
+        st.subheader("🎬 Individual Chunks")
+        
+        for trans in results['transcriptions'][:5]:  # Show first 5
+            with st.expander(f"Chunk {trans['chunk_number']} ({format_time(trans['start_time'])} - {format_time(trans['end_time'])})"):
+                st.write(trans['transcription'])
+        
+        if len(results['transcriptions']) > 5:
+            st.info(f"📄 Showing 5 of {len(results['transcriptions'])} chunks. Download the complete kit for all transcriptions.")
+    
+    # Preview chunks
+    st.header("🎵 Audio Chunks Preview")
+    
+    for i, chunk in enumerate(chunks[:3]):  # Show first 3
+        with st.expander(f"🎬 Chunk {chunk['chunk_number']} ({format_time(chunk['start_time'])} - {format_time(chunk['end_time'])})"):
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write(f"**Duration:** {chunk['duration']:.1f} seconds")
+                st.write(f"**File Size:** {chunk['file_size']/1024:.1f} KB")
+            
+            with col2:
+                if os.path.exists(chunk['file_path']):
+                    with open(chunk['file_path'], 'rb') as f:
+                        st.download_button(
+                            f"💾 Download Audio Chunk",
+                            f.read(),
+                            f"chunk_{chunk['chunk_number']:03d}.wav",
+                            "audio/wav",
+                            key=f"audio_download_{i}"
+                        )
+    
+    if len(chunks) > 3:
+        st.info(f"📄 Showing 3 of {len(chunks)} chunks. Download the complete kit to get all chunks.")
+
+def format_time(seconds):
+    """Format seconds as MM:SS"""
+    m, s = divmod(int(seconds), 60)
+    return f"{m:02d}:{s:02d}"
+
+def main():
+    st.title("🎥 Video Transcription App")
+    st.markdown("**Convert your videos to text in manageable 30-second chunks!**")
+    
+    # Sidebar settings
+    st.sidebar.header("⚙️ Settings")
+    chunk_duration = st.sidebar.slider("Chunk Duration (seconds)", 15, 60, 30, 5)
+    
+    # System check
+    st.sidebar.header("🔧 System Status")
+    ffmpeg_available = check_ffmpeg()
+    
+    if ffmpeg_available:
+        st.sidebar.success("✅ FFmpeg available")
+    else:
+        st.sidebar.error("❌ FFmpeg required")
+        st.sidebar.markdown("""
+        **Install FFmpeg:**
+        1. Visit: https://ffmpeg.org/download.html
+        2. Download for Windows
+        3. Add to system PATH
+        4. Restart this app
+        """)
+    
+    # Main content
+    st.header("📁 Upload Your Video")
+    
+    if not ffmpeg_available:
+        st.error("⚠️ FFmpeg is required for video processing. Please install FFmpeg first.")
+        st.stop()
+    
+    uploaded_file = st.file_uploader(
+        "Choose a video file",
+        type=['mp4', 'mov', 'avi', 'mkv', 'wmv'],
+        help="Supported formats: MP4, MOV, AVI, MKV, WMV"
+    )
+    
+    if uploaded_file:
+        file_size = uploaded_file.size / 1024 / 1024
+        st.success(f"✅ **{uploaded_file.name}** uploaded ({file_size:.1f} MB)")
+        
+        if st.button("🚀 Process Video", type="primary", use_container_width=True):
+            progress = st.progress(0)
+            status = st.empty()
+            
+            start_time = time.time()
+            
+            try:
+                # Save video temporarily
+                with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as temp_video:
+                    temp_video.write(uploaded_file.read())
+                    video_path = temp_video.name
+                
+                progress.progress(0.1)
+                status.info("📁 Video file saved")
+                
+                # Extract audio
+                status.info("🎵 Extracting audio with FFmpeg...")
+                audio_path, duration = extract_audio_ffmpeg(video_path)
+                
+                if not audio_path:
+                    # Try MoviePy as fallback
+                    status.info("🔄 Trying alternative method...")
+                    audio_path, duration = extract_audio_moviepy(video_path)
+                
+                if not audio_path:
+                    st.error("❌ Failed to extract audio with all methods")
+                    return
+                
+                progress.progress(0.4)
+                status.info(f"✅ Audio extracted - Duration: {format_time(duration)}")
+                
+                # Split into chunks
+                status.info("✂️ Creating audio chunks...")
+                chunks = split_audio_chunks(audio_path, duration, chunk_duration)
+                
+                if not chunks:
+                    st.error("❌ Failed to create audio chunks")
+                    return
+                
+                progress.progress(0.7)
+                status.info(f"✅ Created {len(chunks)} audio chunks")
+                
+                # Create templates
+                status.info("📝 Creating transcription templates...")
+                templates = create_templates(chunks)
+                
+                progress.progress(0.9)
+                
+                # Transcribe audio chunks
+                status.info("🎙️ Transcribing audio chunks...")
+                transcriptions = transcribe_audio_chunks(chunks)
+                
+                if transcriptions:
+                    status.info("✅ Transcription completed!")
+                else:
+                    status.info("⚠️ Transcription skipped (Whisper not available)")
+                
+                # Create download kit
+                status.info("📦 Preparing download kit...")
+                metadata = {
+                    'filename': uploaded_file.name,
+                    'duration': duration,
+                    'chunk_duration': chunk_duration
+                }
+                
+                kit_data = create_download_kit(chunks, templates, metadata, transcriptions)
+                
+                # Store results
+                st.session_state.processing_results = {
+                    'chunks': chunks,
+                    'templates': templates,
+                    'transcriptions': transcriptions,
+                    'metadata': metadata,
+                    'kit_data': kit_data
+                }
+                
+                progress.progress(1.0)
+                elapsed = time.time() - start_time
+                status.success(f"🎉 Processing completed in {elapsed:.1f} seconds!")
+                
+                # Cleanup temp files
+                os.unlink(video_path)
+                os.unlink(audio_path)
+                
+            except Exception as e:
+                st.error(f"❌ Processing failed: {e}")
+                st.exception(e)
+
+# Display results if available
+if 'processing_results' in st.session_state:
+    results = st.session_state.processing_results
+    chunks = results['chunks']
+    metadata = results['metadata']
+    
+    st.header("📊 Processing Results")
+    
+    # Summary metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Video Duration", format_time(metadata['duration']))
+    with col2:
+        st.metric("Audio Chunks", len(chunks))
+    with col3:
+        st.metric("Chunk Duration", f"{metadata['chunk_duration']}s")
+    with col4:
+        total_size = sum(chunk['file_size'] for chunk in chunks) / 1024 / 1024
+        st.metric("Total Audio Size", f"{total_size:.1f} MB")
+    
+    # Download section
+    st.header("📥 Download Complete Kit")
+    
+    st.download_button(
+        "📦 Download Transcription Kit",
+        results['kit_data'],
+        f"transcription_kit_{Path(metadata['filename']).stem}.zip",
+        "application/zip",
+        type="primary",
+        use_container_width=True,
+        help="Contains audio chunks, templates, and transcriptions"
+    )
+    
+    # Display transcriptions if available
+    if results.get('transcriptions'):
+        st.header("📝 Transcriptions")
+        
+        # Full transcription view
+        with st.expander("📄 Full Transcription", expanded=True):
+            full_text = ""
+            for trans in results['transcriptions']:
+                full_text += f"**[{format_time(trans['start_time'])} - {format_time(trans['end_time'])}]**\n"
+                full_text += f"{trans['transcription']}\n\n"
+            
+            st.markdown(full_text)
+        
+        # Individual chunks
+        st.subheader("🎬 Individual Chunks")
+        
+        for trans in results['transcriptions'][:5]:  # Show first 5
+            with st.expander(f"Chunk {trans['chunk_number']} ({format_time(trans['start_time'])} - {format_time(trans['end_time'])})"):
+                st.write(trans['transcription'])
+        
+        if len(results['transcriptions']) > 5:
+            st.info(f"📄 Showing 5 of {len(results['transcriptions'])} chunks. Download the complete kit for all transcriptions.")
+    
+    # Quick preview
+    st.header("🎵 Audio Chunks Preview")
+    
+    for chunk in chunks[:3]:  # Show first 3
+        with st.expander(f"Chunk {chunk['chunk_number']} ({format_time(chunk['start_time'])} - {format_time(chunk['end_time'])})"):
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write(f"**Duration:** {chunk['duration']:.1f}s")
+                st.write(f"**Size:** {chunk['file_size']/1024:.1f} KB")
+            
+            with col2:
+                if os.path.exists(chunk['file_path']):
+                    with open(chunk['file_path'], 'rb') as f:
+                        st.download_button(
+                            "💾 Download",
+                            f.read(),
+                            f"chunk_{chunk['chunk_number']:03d}.wav",
+                            "audio/wav",
+                            key=f"chunk_download_{chunk['chunk_number']}"
+                        )
+    
+    if len(chunks) > 3:
+        st.info(f"+ {len(chunks) - 3} more chunks in the complete download kit")
+    
+    # Instructions
+    st.header("📋 Next Steps")
+    
+    st.success("""
+    **Your transcription kit is ready!**
+    
+    1. **Download the kit** above
+    2. **Choose your transcription method:**
+       - **Automatic:** Install Whisper and run the provided commands
+       - **Manual:** Use the template files and audio chunks
+    3. **Follow the detailed instructions** in the downloaded README.txt
+    """)
+
+if __name__ == "__main__":
+    main()
